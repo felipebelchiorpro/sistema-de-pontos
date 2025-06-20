@@ -7,7 +7,10 @@ import {
   registerSale as dbRegisterSale,
   redeemPoints as dbRedeemPoints,
   getPartnerByCoupon,
+  getPartnerById,
+  getTransactionsForPartnerByDateRange,
 } from './mock-data';
+import type { Partner, Transaction } from '@/types';
 
 const PartnerSchema = z.object({
   name: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres.' }),
@@ -36,12 +39,11 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     revalidatePath('/reports');
     return { message: result.message, success: true, partner: result.partner };
   } else {
-    // Ensure specific coupon error is returned if that's the case
     const errors: Record<string, string[]> = {};
     if (result.message.toLowerCase().includes('cupom')) {
       errors.coupon = [result.message];
     } else {
-      errors._form = [result.message]; // General error
+      errors._form = [result.message]; 
     }
     return { message: result.message, success: false, errors };
   }
@@ -89,7 +91,7 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     } else if (result.message.toLowerCase().includes("valor da venda") || result.message.toLowerCase().includes("valor")) {
       fieldErrors.totalSaleValue = [result.message];
     } else {
-      fieldErrors._form = [result.message]; // General error
+      fieldErrors._form = [result.message]; 
     }
     return { message: result.message, success: false, errors: fieldErrors };
   }
@@ -142,10 +144,8 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
   }
 }
 
-
-// Server action to fetch partner points for display in client components
 export async function fetchPartnerPointsAction(coupon: string): Promise<{ points: number | null; error?: string }> {
-  if (!coupon || coupon.trim().length < 3) { // Basic validation
+  if (!coupon || coupon.trim().length < 3) { 
     return { points: null, error: "Cupom deve ter pelo menos 3 caracteres." };
   }
   try {
@@ -157,5 +157,23 @@ export async function fetchPartnerPointsAction(coupon: string): Promise<{ points
   } catch (e: any) {
     console.error("Error fetching partner points:", e);
     return { points: null, error: "Erro ao buscar pontos do parceiro." };
+  }
+}
+
+export async function fetchIndividualPartnerReportDataAction(
+  partnerId: string,
+  startDate?: string,
+  endDate?: string
+): Promise<{ partner: Partner; transactions: Transaction[] } | { error: string }> {
+  try {
+    const partner = await getPartnerById(partnerId);
+    if (!partner) {
+      return { error: "Parceiro não encontrado." };
+    }
+    const transactions = await getTransactionsForPartnerByDateRange(partnerId, startDate, endDate);
+    return { partner, transactions };
+  } catch (e: any) {
+    console.error("Error fetching individual partner report data:", e);
+    return { error: "Erro ao buscar dados do relatório individual." };
   }
 }

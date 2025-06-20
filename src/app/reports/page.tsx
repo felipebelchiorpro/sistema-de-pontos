@@ -3,7 +3,8 @@ import { getPartners, getTransactionsForPartner, getAllTransactionsWithPartnerDe
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PartnerTransactionsTable } from "@/components/reports/PartnerTransactionsTable";
-import { ReportExporter } from "@/components/reports/ReportExporter"; // Novo componente
+import { ReportExporter } from "@/components/reports/ReportExporter";
+import { IndividualReportControls } from "@/components/reports/IndividualReportControls"; // Novo componente
 import { Badge } from "@/components/ui/badge";
 import { UserCircle, Award, Coins, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react";
 import type { Partner, Transaction } from "@/types";
@@ -31,7 +32,6 @@ export default async function ReportsPage() {
     { title: "Saldo de Pontos (Gerados - Resgatados)", value: pointsBalance.toFixed(2) + " pts", icon: Scale, color: pointsBalance >= 0 ? "text-blue-400" : "text-red-500" },
   ];
 
-  // Preparar dados para o ReportExporter
   const partnersWithTransactionsData = await Promise.all(
     sortedPartners.map(async (partner) => {
       const transactions = await getTransactionsForPartner(partner.id);
@@ -44,10 +44,10 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Relatório de Pontos dos Parceiros</h1>
-          <p className="text-muted-foreground">Visualize os totais de pontos do programa e o histórico de transações de cada parceiro.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Relatórios</h1>
+          <p className="text-muted-foreground">Visualize os totais de pontos, detalhes por parceiro e gere relatórios.</p>
         </div>
         <ReportExporter 
           summaryCardsData={summaryCardsDataForPdf} 
@@ -70,16 +70,19 @@ export default async function ReportsPage() {
           </Card>
         ))}
       </div>
+      
+      {/* Seção para Relatório Individual */}
+      <IndividualReportControls partners={partners} />
 
+      {/* Seção de Detalhes dos Parceiros (Relatório Geral) */}
       {sortedPartners.length > 0 ? (
         <Card className="bg-card">
           <CardHeader>
-            <CardTitle>Detalhes dos Parceiros</CardTitle>
-            <CardDescription>Clique em um parceiro para ver seu histórico de transações e saldo individual.</CardDescription>
+            <CardTitle>Detalhes Gerais dos Parceiros</CardTitle>
+            <CardDescription>Clique em um parceiro para ver seu histórico de transações e saldo individual (visão geral).</CardDescription>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
-              {/* Reutilizando partnersWithTransactionsData para a Accordion */}
               {partnersWithTransactionsData.map(({partner, transactions}, index) => (
                   <AccordionItem value={`partner-${partner.id}`} key={partner.id} className="border-b border-border last:border-b-0">
                     <AccordionTrigger className="hover:bg-secondary/30 px-4 py-3 rounded-t-md data-[state=open]:bg-secondary/40 data-[state=open]:rounded-b-none transition-colors">

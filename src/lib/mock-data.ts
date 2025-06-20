@@ -3,6 +3,7 @@
 // In a real application, this would interact with a database.
 import type { Partner, Transaction } from '@/types';
 import { TransactionType } from '@/types';
+import { parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 
 // Ensure crypto.randomUUID is available (Node.js 16+)
 const generateUUID = (): string => {
@@ -139,13 +140,43 @@ export async function getTransactionsForPartner(partnerId: string): Promise<Tran
   
   return transactions
     .filter(t => t.partnerId === partnerId)
-    // partnerName and partnerCoupon are already part of the Transaction when created
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
+export async function getTransactionsForPartnerByDateRange(
+  partnerId: string,
+  startDateString?: string,
+  endDateString?: string
+): Promise<Transaction[]> {
+  const partner = await getPartnerById(partnerId);
+  if (!partner) return [];
+
+  let partnerTransactions = transactions.filter(t => t.partnerId === partnerId);
+
+  const startDate = startDateString ? startOfDay(parseISO(startDateString)) : null;
+  const endDate = endDateString ? endOfDay(parseISO(endDateString)) : null;
+
+  if (startDate || endDate) {
+    partnerTransactions = partnerTransactions.filter(t => {
+      const transactionDate = parseISO(t.date);
+      if (startDate && endDate) {
+        return isWithinInterval(transactionDate, { start: startDate, end: endDate });
+      }
+      if (startDate) {
+        return transactionDate >= startDate;
+      }
+      if (endDate) {
+        return transactionDate <= endDate;
+      }
+      return true; // Should not happen if startDate or endDate is defined
+    });
+  }
+
+  return partnerTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+
 export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
-  // partnerName and partnerCoupon are already part of the Transaction when created
-  // We just need to sort them.
   const allTransactions = JSON.parse(JSON.stringify(transactions)) as Transaction[];
   return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
