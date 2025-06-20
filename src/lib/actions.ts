@@ -24,6 +24,7 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     return {
       message: 'Erro de validação.',
       errors: validatedFields.error.flatten().fieldErrors,
+      success: false,
     };
   }
 
@@ -35,7 +36,14 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     revalidatePath('/reports');
     return { message: result.message, success: true, partner: result.partner };
   } else {
-    return { message: result.message, success: false, errors: { coupon: [result.message] } };
+    // Ensure specific coupon error is returned if that's the case
+    const errors: Record<string, string[]> = {};
+    if (result.message.toLowerCase().includes('cupom')) {
+      errors.coupon = [result.message];
+    } else {
+      errors._form = [result.message]; // General error
+    }
+    return { message: result.message, success: false, errors };
   }
 }
 
@@ -56,6 +64,7 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     return {
       message: 'Erro de validação.',
       errors: validatedFields.error.flatten().fieldErrors,
+      success: false,
     };
   }
 
@@ -66,12 +75,12 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     revalidatePath('/sales');
     revalidatePath('/partners');
     revalidatePath('/reports');
-    revalidatePath('/'); // Revalidate dashboard page for recent transactions
-    return { 
-      message: result.message, 
-      success: true, 
-      pointsGenerated: result.pointsGenerated, 
-      discountedValue: result.discountedValue 
+    revalidatePath('/');
+    return {
+      message: result.message,
+      success: true,
+      pointsGenerated: result.pointsGenerated,
+      discountedValue: result.discountedValue
     };
   } else {
     const fieldErrors: Record<string, string[]> = {};
@@ -79,8 +88,9 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       fieldErrors.coupon = [result.message];
     } else if (result.message.toLowerCase().includes("valor da venda") || result.message.toLowerCase().includes("valor")) {
       fieldErrors.totalSaleValue = [result.message];
+    } else {
+      fieldErrors._form = [result.message]; // General error
     }
-    // No specific error for externalSaleId from dbRegisterSale for now
     return { message: result.message, success: false, errors: fieldErrors };
   }
 }
@@ -100,16 +110,18 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
     return {
       message: 'Erro de validação.',
       errors: validatedFields.error.flatten().fieldErrors,
+      success: false,
     };
   }
-  
+
   const { coupon, pointsToRedeem } = validatedFields.data;
   const partner = await getPartnerByCoupon(coupon.toUpperCase());
+
   if (!partner) {
     return { message: 'Cupom inválido.', success: false, errors: { coupon: ['Cupom inválido.'] } };
   }
   if (partner.points < pointsToRedeem) {
-     return { message: 'Pontos insuficientes.', success: false, errors: { pointsToRedeem: ['Pontos insuficientes.'] } };
+     return { message: 'Pontos insuficientes para resgate.', success: false, errors: { pointsToRedeem: ['Pontos insuficientes para resgate.'] } };
   }
 
   const result = await dbRedeemPoints(coupon.toUpperCase(), pointsToRedeem);
@@ -118,14 +130,32 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
     revalidatePath('/redemptions');
     revalidatePath('/partners');
     revalidatePath('/reports');
-    revalidatePath('/'); // Revalidate dashboard page
-    return { message: result.message, success: true };
+    revalidatePath('/');
+    return { message: result.message, success: true, errors: {} };
   } else {
     const fieldErrors: Record<string, string[]> = {};
     if (result.message.toLowerCase().includes("cupom")) fieldErrors.coupon = [result.message];
     else if (result.message.toLowerCase().includes("pontos")) fieldErrors.pointsToRedeem = [result.message];
-    else fieldErrors._form = [result.message]; 
+    else fieldErrors._form = [result.message];
 
     return { message: result.message, success: false, errors: fieldErrors };
+  }
+}
+
+
+// Server action to fetch partner points for display in client components
+export async function fetchPartnerPointsAction(coupon: string): Promise<{ points: number | null; error?: string }> {
+  if (!coupon || coupon.trim().length < 3) { // Basic validation
+    return { points: null, error: "Cupom deve ter pelo menos 3 caracteres." };
+  }
+  try {
+    const partner = await getPartnerByCoupon(coupon.toUpperCase());
+    if (partner) {
+      return { points: partner.points, error: undefined };
+    }
+    return { points: null, error: "Cupom não encontrado." };
+  } catch (e: any) {
+    console.error("Error fetching partner points:", e);
+    return { points: null, error: "Erro ao buscar pontos do parceiro." };
   }
 }

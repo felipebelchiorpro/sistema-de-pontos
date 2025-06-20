@@ -9,12 +9,10 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { redeemPointsAction } from "@/lib/actions";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { redeemPointsAction, fetchPartnerPointsAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Gift, CheckCircle } from "lucide-react";
-import { getPartnerByCoupon } from "@/lib/mock-data"; // This is a server function, can't be called directly.
-                                                      // We need an action to fetch partner points.
 
 const RedemptionSchema = z.object({
   coupon: z.string().min(1, { message: "Cupom é obrigatório." }),
@@ -23,31 +21,11 @@ const RedemptionSchema = z.object({
 
 type RedemptionFormData = z.infer<typeof RedemptionSchema>;
 
-const initialState = {
+const initialActionState = {
   message: "",
   errors: {},
   success: false,
 };
-
-// This action is only for fetching partner points for display, not part of the library actions.ts
-async function fetchPartnerPoints(coupon: string): Promise<{ points: number | null, error?: string }> {
-  "use server"; // Make this a server action itself
-  if (!coupon) return { points: null };
-  try {
-    // In a real app, you'd call your actual data fetching logic here.
-    // For now, simulating this by re-importing (though this direct import from mock-data in a client-invoked server action is tricky.
-    // A better pattern would be a dedicated server action in actions.ts for this if needed frequently by client.
-    // But for this limited use, this internal action might be okay.
-    const dataLib = await import('@/lib/mock-data');
-    const partner = await dataLib.getPartnerByCoupon(coupon.toUpperCase());
-    if (partner) {
-      return { points: partner.points };
-    }
-    return { points: null, error: "Cupom não encontrado." };
-  } catch (e) {
-    return { points: null, error: "Erro ao buscar pontos." };
-  }
-}
 
 
 function SubmitButton() {
@@ -61,7 +39,7 @@ function SubmitButton() {
 }
 
 export function RedemptionForm() {
-  const [state, formAction] = useFormState(redeemPointsAction, initialState);
+  const [state, formAction] = useFormState(redeemPointsAction, initialActionState);
   const { toast } = useToast();
   const [currentPartnerPoints, setCurrentPartnerPoints] = useState<number | null>(null);
   const [couponCheckError, setCouponCheckError] = useState<string | null>(null);
@@ -79,18 +57,18 @@ export function RedemptionForm() {
 
   useEffect(() => {
     let debounceTimer: NodeJS.Timeout;
-    if (watchedCoupon && watchedCoupon.length >= 3) { // Check points when coupon has some length
-      setCouponCheckError(null); // Reset error
+    if (watchedCoupon && watchedCoupon.length >= 3) {
+      setCouponCheckError(null);
       debounceTimer = setTimeout(async () => {
-        const result = await fetchPartnerPoints(watchedCoupon);
+        const result = await fetchPartnerPointsAction(watchedCoupon.toUpperCase());
         if (result.points !== null) {
           setCurrentPartnerPoints(result.points);
           setCouponCheckError(null);
         } else {
           setCurrentPartnerPoints(null);
-          setCouponCheckError(result.error || "Cupom não encontrado ou erro.");
+          setCouponCheckError(result.error || "Cupom não encontrado ou erro ao buscar pontos.");
         }
-      }, 500); // Debounce for 500ms
+      }, 500);
     } else {
       setCurrentPartnerPoints(null);
       setCouponCheckError(null);
@@ -106,21 +84,28 @@ export function RedemptionForm() {
         description: state.message,
       });
       form.reset();
-      setCurrentPartnerPoints(null); // Reset points display
+      setCurrentPartnerPoints(null);
       setCouponCheckError(null);
     } else if (state.message && !state.success && state.errors) {
       const errorFields = state.errors as any;
-       if (errorFields?.coupon) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
-       if (errorFields?.pointsToRedeem) form.setError("pointsToRedeem", { type: "manual", message: errorFields.pointsToRedeem[0] });
-       
-       if (!errorFields?.coupon && !errorFields?.pointsToRedeem && state.message) {
+       if (errorFields?.coupon?.[0]) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
+       if (errorFields?.pointsToRedeem?.[0]) form.setError("pointsToRedeem", { type: "manual", message: errorFields.pointsToRedeem[0] });
+
+       // Exibe erro geral se não for erro de campo específico
+       if (!errorFields?.coupon && !errorFields?.pointsToRedeem && state.message && !errorFields?._form?.[0]) {
           toast({
             title: "Erro ao resgatar pontos",
             description: state.message,
             variant: "destructive",
           });
+       } else if (errorFields?._form?.[0]) { // Erro geral retornado pelo _form
+            toast({
+                title: "Erro",
+                description: errorFields._form[0],
+                variant: "destructive",
+            });
        }
-    } else if (state.message && !state.success) { // General error not tied to a field
+    } else if (state.message && !state.success && Object.keys(state.errors || {}).length === 0) {
         toast({
             title: "Erro",
             description: state.message,
@@ -135,7 +120,7 @@ export function RedemptionForm() {
     formData.append("pointsToRedeem", data.pointsToRedeem.toString());
     formAction(formData);
   };
-  
+
   const handleCouponInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     form.setValue("coupon", event.target.value.toUpperCase(), { shouldValidate: true });
   };
@@ -161,7 +146,7 @@ export function RedemptionForm() {
             {form.formState.errors.coupon && (
               <p className="text-sm text-destructive">{form.formState.errors.coupon.message}</p>
             )}
-            {state?.errors?.coupon && (
+            {state?.errors?.coupon && Array.isArray(state.errors.coupon) && (
                <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
             )}
             {couponCheckError && !form.formState.errors.coupon && (
@@ -185,13 +170,13 @@ export function RedemptionForm() {
                     {...form.register("pointsToRedeem")}
                     placeholder="50.00"
                     className="pl-9 bg-input"
-                    disabled={currentPartnerPoints === null}
+                    disabled={currentPartnerPoints === null && !couponCheckError} // Disable if no points or coupon is invalid
                 />
             </div>
             {form.formState.errors.pointsToRedeem && (
               <p className="text-sm text-destructive">{form.formState.errors.pointsToRedeem.message}</p>
             )}
-            {state?.errors?.pointsToRedeem && (
+            {state?.errors?.pointsToRedeem && Array.isArray(state.errors.pointsToRedeem) &&(
                <p className="text-sm text-destructive">{state.errors.pointsToRedeem[0]}</p>
             )}
           </div>
