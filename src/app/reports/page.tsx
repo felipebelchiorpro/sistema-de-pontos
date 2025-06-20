@@ -3,15 +3,16 @@ import { getPartners, getTransactionsForPartner, getAllTransactionsWithPartnerDe
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PartnerTransactionsTable } from "@/components/reports/PartnerTransactionsTable";
+import { ReportExporter } from "@/components/reports/ReportExporter"; // Novo componente
 import { Badge } from "@/components/ui/badge";
 import { UserCircle, Award, Coins, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react";
+import type { Partner, Transaction } from "@/types";
 import { TransactionType } from "@/types";
 
 export default async function ReportsPage() {
   const partners = await getPartners();
   const allTransactions = await getAllTransactionsWithPartnerDetails();
   
-  // Sort partners by points descending for a ranked view
   const sortedPartners = [...partners].sort((a, b) => b.points - a.points);
 
   const totalPointsInHand = partners.reduce((sum, p) => sum + p.points, 0);
@@ -30,11 +31,28 @@ export default async function ReportsPage() {
     { title: "Saldo de Pontos (Gerados - Resgatados)", value: pointsBalance.toFixed(2) + " pts", icon: Scale, color: pointsBalance >= 0 ? "text-blue-400" : "text-red-500" },
   ];
 
+  // Preparar dados para o ReportExporter
+  const partnersWithTransactionsData = await Promise.all(
+    sortedPartners.map(async (partner) => {
+      const transactions = await getTransactionsForPartner(partner.id);
+      return { partner, transactions };
+    })
+  );
+
+  const summaryCardsDataForPdf = summaryCards.map(s => ({ title: s.title, value: s.value }));
+
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Relatório de Pontos dos Parceiros</h1>
-        <p className="text-muted-foreground">Visualize os totais de pontos do programa e o histórico de transações de cada parceiro.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Relatório de Pontos dos Parceiros</h1>
+          <p className="text-muted-foreground">Visualize os totais de pontos do programa e o histórico de transações de cada parceiro.</p>
+        </div>
+        <ReportExporter 
+          summaryCardsData={summaryCardsDataForPdf} 
+          partnersData={partnersWithTransactionsData} 
+        />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -61,9 +79,8 @@ export default async function ReportsPage() {
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
-              {await Promise.all(sortedPartners.map(async (partner, index) => {
-                const transactions = await getTransactionsForPartner(partner.id);
-                return (
+              {/* Reutilizando partnersWithTransactionsData para a Accordion */}
+              {partnersWithTransactionsData.map(({partner, transactions}, index) => (
                   <AccordionItem value={`partner-${partner.id}`} key={partner.id} className="border-b border-border last:border-b-0">
                     <AccordionTrigger className="hover:bg-secondary/30 px-4 py-3 rounded-t-md data-[state=open]:bg-secondary/40 data-[state=open]:rounded-b-none transition-colors">
                       <div className="flex items-center justify-between w-full">
@@ -88,8 +105,7 @@ export default async function ReportsPage() {
                       <PartnerTransactionsTable transactions={transactions} />
                     </AccordionContent>
                   </AccordionItem>
-                );
-              }))}
+                ))}
             </Accordion>
           </CardContent>
         </Card>
