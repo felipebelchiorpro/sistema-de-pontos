@@ -1,10 +1,11 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
+import { useFormStatus } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,7 @@ function SubmitButton() {
 }
 
 export function PartnerForm() {
-  const [state, formAction] = useFormState(addPartnerAction, initialState);
+  const [state, formAction] = useActionState(addPartnerAction, initialState);
   const { toast } = useToast();
 
   const form = useForm<PartnerFormData>({
@@ -55,14 +56,12 @@ export function PartnerForm() {
         title: "Sucesso!",
         description: state.message,
       });
-      form.reset(); // Reset form fields
-      // Reset form state from useFormState manually if needed, or rely on new submissions
+      form.reset(); 
     } else if (state.message && !state.success && Object.keys(state.errors || {}).length > 0) {
-       // Prioritize field errors from Zod/action if available
       const errorFields = state.errors as any;
       if (errorFields?.name) form.setError("name", { type: "manual", message: errorFields.name[0] });
       if (errorFields?.coupon) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
-      if (!errorFields?.name && !errorFields?.coupon && state.message) { // general error
+      if (!errorFields?.name && !errorFields?.coupon && state.message) { 
          toast({
             title: "Erro ao cadastrar parceiro",
             description: state.message,
@@ -82,7 +81,7 @@ export function PartnerForm() {
   const handleFormSubmit = (data: PartnerFormData) => {
     const formData = new FormData();
     formData.append("name", data.name);
-    formData.append("coupon", data.coupon.toUpperCase()); // Ensure coupon is uppercase
+    formData.append("coupon", data.coupon.toUpperCase());
     formAction(formData);
   };
   
@@ -110,7 +109,7 @@ export function PartnerForm() {
             {form.formState.errors.name && (
               <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
             )}
-             {state?.errors?.name && (
+             {state?.errors?.name && Array.isArray(state.errors.name) && (
               <p className="text-sm text-destructive">{state.errors.name[0]}</p>
             )}
           </div>
@@ -128,7 +127,7 @@ export function PartnerForm() {
             {form.formState.errors.coupon && (
               <p className="text-sm text-destructive">{form.formState.errors.coupon.message}</p>
             )}
-            {state?.errors?.coupon && (
+            {state?.errors?.coupon && Array.isArray(state.errors.coupon) && (
                <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
             )}
           </div>

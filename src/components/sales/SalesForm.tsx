@@ -1,10 +1,12 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +43,7 @@ function SubmitButton() {
 }
 
 export function SalesForm() {
-  const [state, formAction] = useFormState(registerSaleAction, initialState);
+  const [state, formAction] = useActionState(registerSaleAction, initialState);
   const { toast } = useToast();
 
   const [calculatedDiscountedValue, setCalculatedDiscountedValue] = useState<number | null>(null);

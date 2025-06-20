@@ -1,10 +1,12 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +41,7 @@ function SubmitButton() {
 }
 
 export function RedemptionForm() {
-  const [state, formAction] = useFormState(redeemPointsAction, initialActionState);
+  const [state, formAction] = useActionState(redeemPointsAction, initialActionState);
   const { toast } = useToast();
   const [currentPartnerPoints, setCurrentPartnerPoints] = useState<number | null>(null);
   const [couponCheckError, setCouponCheckError] = useState<string | null>(null);
@@ -91,14 +93,13 @@ export function RedemptionForm() {
        if (errorFields?.coupon?.[0]) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
        if (errorFields?.pointsToRedeem?.[0]) form.setError("pointsToRedeem", { type: "manual", message: errorFields.pointsToRedeem[0] });
 
-       // Exibe erro geral se não for erro de campo específico
        if (!errorFields?.coupon && !errorFields?.pointsToRedeem && state.message && !errorFields?._form?.[0]) {
           toast({
             title: "Erro ao resgatar pontos",
             description: state.message,
             variant: "destructive",
           });
-       } else if (errorFields?._form?.[0]) { // Erro geral retornado pelo _form
+       } else if (errorFields?._form?.[0]) { 
             toast({
                 title: "Erro",
                 description: errorFields._form[0],
@@ -170,7 +171,7 @@ export function RedemptionForm() {
                     {...form.register("pointsToRedeem")}
                     placeholder="50.00"
                     className="pl-9 bg-input"
-                    disabled={currentPartnerPoints === null && !couponCheckError} // Disable if no points or coupon is invalid
+                    disabled={currentPartnerPoints === null && !couponCheckError} 
                 />
             </div>
             {form.formState.errors.pointsToRedeem && (
