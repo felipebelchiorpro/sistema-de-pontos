@@ -18,18 +18,9 @@ const generateUUID = (): string => {
 };
 
 
-let partners: Partner[] = [
-  { id: generateUUID(), name: 'Loja Exemplo 1', coupon: 'PARCEIRO001', points: 225.50 },
-  { id: generateUUID(), name: 'Influencer Fit', coupon: 'FITDESCONTO', points: 150.25 },
-  { id: generateUUID(), name: 'Academia Power', coupon: 'POWERGYM', points: 450.75 },
-];
+let partners: Partner[] = [];
 
-let transactions: Transaction[] = [
-  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.SALE, amount: 7.5, originalSaleValue: 100, discountedValue: 92.5, externalSaleId: 'EXT-A01', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), partnerName: partners[0].name, partnerCoupon: partners[0].coupon },
-  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.REDEMPTION, amount: 50, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), partnerName: partners[0].name, partnerCoupon: partners[0].coupon },
-  { id: generateUUID(), partnerId: partners[1].id, type: TransactionType.SALE, amount: 15.0, originalSaleValue: 200, discountedValue: 185, externalSaleId: 'EXT-B02', date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), partnerName: partners[1].name, partnerCoupon: partners[1].coupon },
-  { id: generateUUID(), partnerId: partners[2].id, type: TransactionType.SALE, amount: 30.0, originalSaleValue: 400, discountedValue: 370, externalSaleId: 'EXT-C03', date: new Date().toISOString(), partnerName: partners[2].name, partnerCoupon: partners[2].coupon },
-];
+let transactions: Transaction[] = [];
 
 export async function getPartners(): Promise<Partner[]> {
   return JSON.parse(JSON.stringify(partners)); // Deep copy
