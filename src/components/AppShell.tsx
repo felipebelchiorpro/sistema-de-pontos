@@ -15,7 +15,7 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Home, Users, ShoppingCart, Gift, BarChart3, Settings, LogOut, Store } from 'lucide-react';
+import { Home, Users, ShoppingCart, Gift, BarChart3, Settings, LogOut, Store, ListChecks } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Toaster } from "@/components/ui/toaster";
 
@@ -31,6 +31,7 @@ const navItems: NavItem[] = [
   { href: '/sales', label: 'Registrar Venda', icon: ShoppingCart },
   { href: '/redemptions', label: 'Resgatar Pontos', icon: Gift },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+  { href: '/transactions', label: 'Transações', icon: ListChecks },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

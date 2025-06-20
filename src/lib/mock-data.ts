@@ -24,10 +24,10 @@ let partners: Partner[] = [
 ];
 
 let transactions: Transaction[] = [
-  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.SALE, amount: 7.5, originalSaleValue: 100, discountedValue: 92.5, externalSaleId: 'EXT-A01', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.REDEMPTION, amount: 50, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: generateUUID(), partnerId: partners[1].id, type: TransactionType.SALE, amount: 15.0, originalSaleValue: 200, discountedValue: 185, externalSaleId: 'EXT-B02', date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: generateUUID(), partnerId: partners[2].id, type: TransactionType.SALE, amount: 30.0, originalSaleValue: 400, discountedValue: 370, externalSaleId: 'EXT-C03', date: new Date().toISOString() },
+  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.SALE, amount: 7.5, originalSaleValue: 100, discountedValue: 92.5, externalSaleId: 'EXT-A01', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), partnerName: partners[0].name, partnerCoupon: partners[0].coupon },
+  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.REDEMPTION, amount: 50, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), partnerName: partners[0].name, partnerCoupon: partners[0].coupon },
+  { id: generateUUID(), partnerId: partners[1].id, type: TransactionType.SALE, amount: 15.0, originalSaleValue: 200, discountedValue: 185, externalSaleId: 'EXT-B02', date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), partnerName: partners[1].name, partnerCoupon: partners[1].coupon },
+  { id: generateUUID(), partnerId: partners[2].id, type: TransactionType.SALE, amount: 30.0, originalSaleValue: 400, discountedValue: 370, externalSaleId: 'EXT-C03', date: new Date().toISOString(), partnerName: partners[2].name, partnerCoupon: partners[2].coupon },
 ];
 
 export async function getPartners(): Promise<Partner[]> {
@@ -92,6 +92,8 @@ export async function registerSale(
     discountedValue: discountedValue,
     externalSaleId: externalSaleId,
     date: new Date().toISOString(),
+    partnerName: partner.name,
+    partnerCoupon: partner.coupon,
   };
   transactions.push(newTransaction);
 
@@ -123,6 +125,8 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
     type: TransactionType.REDEMPTION,
     amount: pointsToRedeem, 
     date: new Date().toISOString(),
+    partnerName: partner.name,
+    partnerCoupon: partner.coupon,
   };
   transactions.push(newTransaction);
 
@@ -135,18 +139,13 @@ export async function getTransactionsForPartner(partnerId: string): Promise<Tran
   
   return transactions
     .filter(t => t.partnerId === partnerId)
-    .map(t => ({...t, partnerName: partner.name, partnerCoupon: partner.coupon }))
+    // partnerName and partnerCoupon are already part of the Transaction when created
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
-  const populatedTransactions = await Promise.all(transactions.map(async (t) => {
-    const partner = await getPartnerById(t.partnerId);
-    return {
-      ...t,
-      partnerName: partner?.name || 'N/A',
-      partnerCoupon: partner?.coupon || 'N/A',
-    };
-  }));
-  return populatedTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // partnerName and partnerCoupon are already part of the Transaction when created
+  // We just need to sort them.
+  const allTransactions = JSON.parse(JSON.stringify(transactions)) as Transaction[];
+  return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
