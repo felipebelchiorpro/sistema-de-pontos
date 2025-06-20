@@ -19,5 +19,6 @@ export interface Transaction {
   amount: number; // For sales, this is points_generated. For redemptions, points_subtracted (positive value)
   originalSaleValue?: number; // Only for sales
   discountedValue?: number; // Only for sales
+  externalSaleId?: string; // ID from external system, only for sales
   date: string; // ISO string
 }

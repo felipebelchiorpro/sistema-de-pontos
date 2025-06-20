@@ -42,12 +42,14 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
 const SaleSchema = z.object({
   coupon: z.string().min(1, { message: 'Cupom é obrigatório.' }),
   totalSaleValue: z.coerce.number().positive({ message: 'Valor da venda deve ser positivo.' }),
+  externalSaleId: z.string().optional(),
 });
 
 export async function registerSaleAction(prevState: any, formData: FormData) {
   const validatedFields = SaleSchema.safeParse({
     coupon: formData.get('coupon'),
     totalSaleValue: formData.get('totalSaleValue'),
+    externalSaleId: formData.get('externalSaleId'),
   });
 
   if (!validatedFields.success) {
@@ -57,13 +59,14 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     };
   }
 
-  const { coupon, totalSaleValue } = validatedFields.data;
-  const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue);
+  const { coupon, totalSaleValue, externalSaleId } = validatedFields.data;
+  const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined);
 
   if (result.success) {
     revalidatePath('/sales');
     revalidatePath('/partners');
     revalidatePath('/reports');
+    revalidatePath('/'); // Revalidate dashboard page for recent transactions
     return { 
       message: result.message, 
       success: true, 
@@ -71,7 +74,14 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       discountedValue: result.discountedValue 
     };
   } else {
-    return { message: result.message, success: false, errors: { coupon: [result.message] } };
+    const fieldErrors: Record<string, string[]> = {};
+    if (result.message.toLowerCase().includes("cupom")) {
+      fieldErrors.coupon = [result.message];
+    } else if (result.message.toLowerCase().includes("valor da venda") || result.message.toLowerCase().includes("valor")) {
+      fieldErrors.totalSaleValue = [result.message];
+    }
+    // No specific error for externalSaleId from dbRegisterSale for now
+    return { message: result.message, success: false, errors: fieldErrors };
   }
 }
 
@@ -108,13 +118,13 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
     revalidatePath('/redemptions');
     revalidatePath('/partners');
     revalidatePath('/reports');
+    revalidatePath('/'); // Revalidate dashboard page
     return { message: result.message, success: true };
   } else {
-     // This case should ideally be caught by pre-validation, but good to have
     const fieldErrors: Record<string, string[]> = {};
     if (result.message.toLowerCase().includes("cupom")) fieldErrors.coupon = [result.message];
     else if (result.message.toLowerCase().includes("pontos")) fieldErrors.pointsToRedeem = [result.message];
-    else fieldErrors._form = [result.message]; // General error
+    else fieldErrors._form = [result.message]; 
 
     return { message: result.message, success: false, errors: fieldErrors };
   }

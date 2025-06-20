@@ -68,7 +68,10 @@ export default async function DashboardPage() {
                   <div className={`font-semibold ${transaction.type === TransactionType.SALE ? 'text-green-400' : 'text-red-400'}`}>
                     {transaction.type === TransactionType.SALE ? '+' : '-'}{transaction.amount.toFixed(2)} pts
                     {transaction.type === TransactionType.SALE && transaction.originalSaleValue && (
-                       <span className="text-xs text-muted-foreground ml-2">(Venda: R$ {transaction.originalSaleValue.toFixed(2)})</span>
+                       <span className="text-xs text-muted-foreground ml-2">
+                         (Venda: R$ {transaction.originalSaleValue.toFixed(2)}
+                         {transaction.externalSaleId && `, ID Ext: ${transaction.externalSaleId}`})
+                       </span>
                     )}
                   </div>
                 </li>

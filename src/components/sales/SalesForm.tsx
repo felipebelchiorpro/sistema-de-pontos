@@ -12,11 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { registerSaleAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Percent, CheckCircle } from "lucide-react";
+import { DollarSign, Percent, CheckCircle, ExternalLink } from "lucide-react";
 
 const SaleSchema = z.object({
   coupon: z.string().min(1, { message: "Cupom é obrigatório." }),
   totalSaleValue: z.coerce.number().positive({ message: "Valor da venda deve ser positivo." }),
+  externalSaleId: z.string().optional(),
 });
 
 type SaleFormData = z.infer<typeof SaleSchema>;
@@ -51,6 +52,7 @@ export function SalesForm() {
     defaultValues: {
       coupon: "",
       totalSaleValue: 0,
+      externalSaleId: "",
     },
   });
 
@@ -78,10 +80,11 @@ export function SalesForm() {
       setCalculatedPointsGenerated(null);
     } else if (state.message && !state.success && state.errors) {
       const errorFields = state.errors as any;
-       if (errorFields?.coupon) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
-       if (errorFields?.totalSaleValue) form.setError("totalSaleValue", { type: "manual", message: errorFields.totalSaleValue[0] });
+       if (errorFields?.coupon?.[0]) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
+       if (errorFields?.totalSaleValue?.[0]) form.setError("totalSaleValue", { type: "manual", message: errorFields.totalSaleValue[0] });
+       if (errorFields?.externalSaleId?.[0]) form.setError("externalSaleId", { type: "manual", message: errorFields.externalSaleId[0] });
        
-       if (!errorFields?.coupon && !errorFields?.totalSaleValue && state.message) {
+       if (!errorFields?.coupon && !errorFields?.totalSaleValue && !errorFields?.externalSaleId && state.message) {
          toast({
             title: "Erro ao registrar venda",
             description: state.message,
@@ -101,6 +104,9 @@ export function SalesForm() {
     const formData = new FormData();
     formData.append("coupon", data.coupon.toUpperCase());
     formData.append("totalSaleValue", data.totalSaleValue.toString());
+    if (data.externalSaleId && data.externalSaleId.trim() !== "") {
+      formData.append("externalSaleId", data.externalSaleId);
+    }
     formAction(formData);
   };
   
@@ -129,7 +135,7 @@ export function SalesForm() {
             {form.formState.errors.coupon && (
               <p className="text-sm text-destructive">{form.formState.errors.coupon.message}</p>
             )}
-             {state?.errors?.coupon && (
+             {state?.errors?.coupon && Array.isArray(state.errors.coupon) && (
                <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
             )}
           </div>
@@ -150,10 +156,30 @@ export function SalesForm() {
             {form.formState.errors.totalSaleValue && (
               <p className="text-sm text-destructive">{form.formState.errors.totalSaleValue.message}</p>
             )}
-            {state?.errors?.totalSaleValue && (
+            {state?.errors?.totalSaleValue && Array.isArray(state.errors.totalSaleValue) && (
                <p className="text-sm text-destructive">{state.errors.totalSaleValue[0]}</p>
             )}
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="externalSaleId">Código da Venda (Sistema Externo)</Label>
+            <div className="relative">
+                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                id="externalSaleId"
+                {...form.register("externalSaleId")}
+                placeholder="Ex: PEDIDO123XYZ (Opcional)"
+                className="pl-9 bg-input"
+                />
+            </div>
+            {form.formState.errors.externalSaleId && (
+              <p className="text-sm text-destructive">{form.formState.errors.externalSaleId.message}</p>
+            )}
+            {state?.errors?.externalSaleId && Array.isArray(state.errors.externalSaleId) && (
+               <p className="text-sm text-destructive">{state.errors.externalSaleId[0]}</p>
+            )}
+          </div>
+
 
           {calculatedDiscountedValue !== null && (
             <div className="space-y-3 pt-2">

@@ -24,10 +24,10 @@ let partners: Partner[] = [
 ];
 
 let transactions: Transaction[] = [
-  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.SALE, amount: 7.5, originalSaleValue: 100, discountedValue: 92.5, date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.SALE, amount: 7.5, originalSaleValue: 100, discountedValue: 92.5, externalSaleId: 'EXT-A01', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
   { id: generateUUID(), partnerId: partners[0].id, type: TransactionType.REDEMPTION, amount: 50, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: generateUUID(), partnerId: partners[1].id, type: TransactionType.SALE, amount: 15.0, originalSaleValue: 200, discountedValue: 185, date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: generateUUID(), partnerId: partners[2].id, type: TransactionType.SALE, amount: 30.0, originalSaleValue: 400, discountedValue: 370, date: new Date().toISOString() },
+  { id: generateUUID(), partnerId: partners[1].id, type: TransactionType.SALE, amount: 15.0, originalSaleValue: 200, discountedValue: 185, externalSaleId: 'EXT-B02', date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: generateUUID(), partnerId: partners[2].id, type: TransactionType.SALE, amount: 30.0, originalSaleValue: 400, discountedValue: 370, externalSaleId: 'EXT-C03', date: new Date().toISOString() },
 ];
 
 export async function getPartners(): Promise<Partner[]> {
@@ -61,7 +61,11 @@ export async function addPartner(name: string, coupon: string): Promise<{ succes
   return { success: true, message: 'Parceiro cadastrado com sucesso.', partner: JSON.parse(JSON.stringify(newPartner)) };
 }
 
-export async function registerSale(coupon: string, totalSaleValue: number): Promise<{ success: boolean; message: string; pointsGenerated?: number; discountedValue?: number }> {
+export async function registerSale(
+  coupon: string, 
+  totalSaleValue: number,
+  externalSaleId?: string
+): Promise<{ success: boolean; message: string; pointsGenerated?: number; discountedValue?: number }> {
   const partnerIndex = partners.findIndex(p => p.coupon.toUpperCase() === coupon.toUpperCase());
   if (partnerIndex === -1) {
     return { success: false, message: 'Cupom inválido.' };
@@ -75,7 +79,6 @@ export async function registerSale(coupon: string, totalSaleValue: number): Prom
   const pointsGenerated = parseFloat((totalSaleValue * 0.075).toFixed(2));
   const discountedValue = parseFloat((totalSaleValue - discount).toFixed(2));
 
-  // Create a new partner object to avoid direct mutation issues with revalidation
   const updatedPartner = { ...partner, points: parseFloat((partner.points + pointsGenerated).toFixed(2)) };
   partners[partnerIndex] = updatedPartner;
 
@@ -87,6 +90,7 @@ export async function registerSale(coupon: string, totalSaleValue: number): Prom
     amount: pointsGenerated,
     originalSaleValue: totalSaleValue,
     discountedValue: discountedValue,
+    externalSaleId: externalSaleId,
     date: new Date().toISOString(),
   };
   transactions.push(newTransaction);
@@ -117,7 +121,7 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
     id: generateUUID(),
     partnerId: partner.id,
     type: TransactionType.REDEMPTION,
-    amount: pointsToRedeem, // Stored as a positive value representing redeemed amount
+    amount: pointsToRedeem, 
     date: new Date().toISOString(),
   };
   transactions.push(newTransaction);

@@ -26,6 +26,7 @@ export function PartnerTransactionsTable({ transactions }: PartnerTransactionsTa
           <TableRow>
             <TableHead>Data</TableHead>
             <TableHead>Tipo</TableHead>
+            <TableHead>ID Externo</TableHead>
             <TableHead className="text-right">Valor Venda (Original)</TableHead>
             <TableHead className="text-right">Pontos</TableHead>
           </TableRow>
@@ -40,6 +41,11 @@ export function PartnerTransactionsTable({ transactions }: PartnerTransactionsTa
                 <Badge variant={transaction.type === TransactionType.SALE ? "default" : "destructive"} className={transaction.type === TransactionType.SALE ? "bg-green-600/80 hover:bg-green-500/80" : "bg-red-600/80 hover:bg-red-500/80"}>
                   {transaction.type}
                 </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground text-xs font-mono">
+                {transaction.type === TransactionType.SALE && transaction.externalSaleId
+                  ? transaction.externalSaleId
+                  : "N/A"}
               </TableCell>
               <TableCell className="text-right text-muted-foreground">
                 {transaction.type === TransactionType.SALE && transaction.originalSaleValue
