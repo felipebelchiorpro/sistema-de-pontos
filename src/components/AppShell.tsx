@@ -44,8 +44,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <SidebarHeader className="p-4">
             <div className="flex items-center gap-2">
                 <Store className="w-8 h-8 text-primary" />
-                <h1 className="text-xl font-semibold text-foreground group-data-[collapsible=icon]:hidden">
-                DarkStore
+                <h1 className="text-lg font-semibold text-foreground group-data-[collapsible=icon]:hidden">
+                DARKSTORE PONTOS
                 </h1>
             </div>
           </SidebarHeader>
@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="flex-1">
                     {/* Breadcrumbs or page title can go here */}
                     <h1 className="text-lg font-semibold">
-                        {navItems.find(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)))?.label || 'DarkStore Partners'}
+                        {navItems.find(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)))?.label || 'DARKSTORE PONTOS'}
                     </h1>
                 </div>
                 {/* Add User Avatar/Menu if needed */}

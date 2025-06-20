@@ -29,7 +29,7 @@ export function ReportExporter({ summaryCardsData, partnersData }: ReportExporte
     let yPos = 15;
 
     doc.setFontSize(18);
-    doc.text("Relatório de Parcerias - DarkStore Suplementos", 14, yPos);
+    doc.text("Relatório de Pontos - DARKSTORE PONTOS", 14, yPos);
     yPos += 10;
 
     doc.setFontSize(10);
@@ -102,7 +102,7 @@ export function ReportExporter({ summaryCardsData, partnersData }: ReportExporte
       yPos += 4; 
     });
 
-    doc.save("relatorio_parceiros.pdf");
+    doc.save("relatorio_darkstore_pontos.pdf");
   };
 
   return (

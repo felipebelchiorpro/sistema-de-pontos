@@ -3,8 +3,8 @@ import './globals.css';
 import { AppShell } from '@/components/AppShell';
 
 export const metadata: Metadata = {
-  title: 'DarkStore Partners',
-  description: 'Sistema de parcerias para DarkStore Suplementos',
+  title: 'DARKSTORE PONTOS',
+  description: 'DARKSTORE PONTOS - Sistema de gerenciamento de pontos para DarkStore Suplementos',
 };
 
 export default function RootLayout({

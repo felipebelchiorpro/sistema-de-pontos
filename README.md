@@ -1,32 +1,33 @@
-# DarkStore Partners Management System
+# DARKSTORE PONTOS
 
-This is a Next.JS application for DarkStore Suplementos to manage their offline partnership program. It allows registration of partners, sales, point redemptions, and provides reporting functionalities.
+Este é um aplicativo Next.JS para DarkStore Suplementos gerenciar seu programa de pontos de parceria offline. Permite o cadastro de parceiros, registro de vendas, resgate de pontos e funcionalidades de relatório.
 
-## Features
+## Funcionalidades
 
-- Partner Management: Register partners with unique coupon codes.
-- Sales Registration: Record sales made using partner coupons, with automatic discount and point calculation.
-- Point Redemption: Allow partners to redeem their accumulated points.
-- Reporting: View partner points and transaction histories.
-- Dark Theme: A visually appealing dark-themed interface.
+- Gerenciamento de Parceiros: Registre parceiros com cupons únicos.
+- Registro de Vendas: Grave vendas utilizando cupons de parceiros, com cálculo automático de desconto e pontos.
+- Resgate de Pontos: Permita que parceiros resgatem seus pontos acumulados.
+- Relatórios: Visualize os pontos dos parceiros e históricos de transações. Exportação para PDF.
+- Tema Escuro: Uma interface visualmente agradável com tema escuro.
 
-## Tech Stack
+## Tecnologias Utilizadas
 
 - Next.js (React Framework)
 - TypeScript
-- Tailwind CSS (Styling)
-- ShadCN/UI (Component Library)
-- Server Actions (Backend Logic Simulation)
+- Tailwind CSS (Estilização)
+- ShadCN/UI (Biblioteca de Componentes)
+- Server Actions (Lógica de Backend)
 - Lucide Icons
+- jspdf, jspdf-autotable (Geração de PDF)
 
-To get started, run the development server:
+Para começar, execute o servidor de desenvolvimento:
 
 ```bash
 npm run dev
-# or
+# ou
 yarn dev
-# or
+# ou
 pnpm dev
 ```
 
-The application will be accessible at `http://localhost:9002`.
+A aplicação estará acessível em `http://localhost:9002`.
