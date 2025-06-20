@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Users, ShoppingCart, Gift } from "lucide-react";
 import Link from "next/link";
@@ -21,10 +22,10 @@ export default async function DashboardPage() {
 
 
   const statCards = [
-    { title: "Total de Parceiros", value: totalPartners, icon: Users, color: "text-blue-400", href:"/partners" },
-    { title: "Vendas Totais (Valor Bruto)", value: `R$ ${totalSalesValue.toFixed(2)}`, icon: ShoppingCart, color: "text-green-400", href:"/sales" },
-    { title: "Total Pontos Gerados", value: totalPointsGenerated.toFixed(2), icon: BarChart3, color: "text-yellow-400", href:"/reports" },
-    { title: "Total Pontos Resgatados", value: totalPointsRedeemed.toFixed(2), icon: Gift, color: "text-red-400", href:"/redemptions" },
+    { title: "Total de Parceiros", value: totalPartners, icon: Users, color: "text-primary", href:"/partners" },
+    { title: "Vendas Totais (Valor Bruto)", value: `R$ ${totalSalesValue.toFixed(2)}`, icon: ShoppingCart, color: "text-chart-4", href:"/sales" },
+    { title: "Total Pontos Gerados", value: totalPointsGenerated.toFixed(2), icon: BarChart3, color: "text-chart-3", href:"/reports" },
+    { title: "Total Pontos Resgatados", value: totalPointsRedeemed.toFixed(2), icon: Gift, color: "text-destructive", href:"/redemptions" },
   ];
 
   return (
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
                       {new Date(transaction.date).toLocaleDateString('pt-BR')} - {transaction.type}
                     </p>
                   </div>
-                  <div className={`font-semibold ${transaction.type === TransactionType.SALE ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className={`font-semibold ${transaction.type === TransactionType.SALE ? 'text-chart-4' : 'text-destructive'}`}>
                     {transaction.type === TransactionType.SALE ? '+' : '-'}{transaction.amount.toFixed(2)} pts
                     {transaction.type === TransactionType.SALE && transaction.originalSaleValue && (
                        <span className="text-xs text-muted-foreground ml-2">

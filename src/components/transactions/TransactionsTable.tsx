@@ -61,7 +61,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                   ? `R$ ${transaction.originalSaleValue.toFixed(2)}`
                   : "N/A"}
               </TableCell>
-              <TableCell className={`text-right font-semibold ${transaction.type === TransactionType.SALE ? 'text-green-400' : 'text-red-400'}`}>
+              <TableCell className={`text-right font-semibold ${transaction.type === TransactionType.SALE ? 'text-chart-4' : 'text-destructive'}`}>
                 {transaction.type === TransactionType.SALE ? '+' : '-'}{transaction.amount.toFixed(2)}
               </TableCell>
             </TableRow>

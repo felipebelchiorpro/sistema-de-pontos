@@ -57,23 +57,36 @@ export function PartnerForm() {
         description: state.message,
       });
       form.reset(); 
-    } else if (state.message && !state.success && Object.keys(state.errors || {}).length > 0) {
+    } else if (!state.success && state.message) {
       const errorFields = state.errors as any;
-      if (errorFields?.name) form.setError("name", { type: "manual", message: errorFields.name[0] });
-      if (errorFields?.coupon) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
-      if (!errorFields?.name && !errorFields?.coupon && state.message) { 
+      let shownFieldErrorToast = false;
+
+      if (errorFields) {
+        if (errorFields.name?.[0]) {
+          form.setError("name", { type: "manual", message: errorFields.name[0] });
+          shownFieldErrorToast = true;
+        }
+        if (errorFields.coupon?.[0]) {
+          form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
+          shownFieldErrorToast = true;
+        }
+        if (errorFields._form?.[0]) {
+           toast({
+                title: "Erro",
+                description: errorFields._form[0],
+                variant: "destructive",
+            });
+           shownFieldErrorToast = true; // Consider this as a field error for toast logic
+        }
+      }
+      
+      if (!shownFieldErrorToast && state.message) {
          toast({
             title: "Erro ao cadastrar parceiro",
             description: state.message,
             variant: "destructive",
-         });
-      }
-    } else if (state.message && !state.success) {
-        toast({
-            title: "Erro",
-            description: state.message,
-            variant: "destructive",
         });
+      }
     }
   }, [state, toast, form]);
 
@@ -109,7 +122,8 @@ export function PartnerForm() {
             {form.formState.errors.name && (
               <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
             )}
-             {state?.errors?.name && Array.isArray(state.errors.name) && (
+             {/* Server-side field error for name, if not already set by client-side RHF */}
+             {state?.errors?.name && Array.isArray(state.errors.name) && !form.formState.errors.name && (
               <p className="text-sm text-destructive">{state.errors.name[0]}</p>
             )}
           </div>
@@ -127,7 +141,8 @@ export function PartnerForm() {
             {form.formState.errors.coupon && (
               <p className="text-sm text-destructive">{form.formState.errors.coupon.message}</p>
             )}
-            {state?.errors?.coupon && Array.isArray(state.errors.coupon) && (
+            {/* Server-side field error for coupon, if not already set by client-side RHF */}
+            {state?.errors?.coupon && Array.isArray(state.errors.coupon) && !form.formState.errors.coupon && (
                <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
             )}
           </div>

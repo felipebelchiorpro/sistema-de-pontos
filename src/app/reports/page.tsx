@@ -1,10 +1,10 @@
 
-import { getPartners, getTransactionsForPartner, getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
+import { getPartners, getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PartnerTransactionsTable } from "@/components/reports/PartnerTransactionsTable";
 import { ReportExporter } from "@/components/reports/ReportExporter";
-import { IndividualReportControls } from "@/components/reports/IndividualReportControls"; // Novo componente
+import { IndividualReportControls } from "@/components/reports/IndividualReportControls"; 
 import { Badge } from "@/components/ui/badge";
 import { UserCircle, Award, Coins, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react";
 import type { Partner, Transaction } from "@/types";
@@ -26,10 +26,10 @@ export default async function ReportsPage() {
   const pointsBalance = totalPointsGeneratedFromSales - totalPointsRedeemedOverall;
 
   const summaryCards = [
-    { title: "Total de Pontos (em mãos)", value: totalPointsInHand.toFixed(2) + " pts", icon: Coins, color: "text-yellow-400" },
-    { title: "Total Pontos Gerados (Vendas)", value: totalPointsGeneratedFromSales.toFixed(2) + " pts", icon: ArrowUpCircle, color: "text-green-400" },
-    { title: "Total Pontos Resgatados", value: totalPointsRedeemedOverall.toFixed(2) + " pts", icon: ArrowDownCircle, color: "text-red-400" },
-    { title: "Saldo de Pontos (Gerados - Resgatados)", value: pointsBalance.toFixed(2) + " pts", icon: Scale, color: pointsBalance >= 0 ? "text-blue-400" : "text-red-500" },
+    { title: "Total de Pontos (em mãos)", value: totalPointsInHand.toFixed(2) + " pts", icon: Coins, color: "text-chart-3" },
+    { title: "Total Pontos Gerados (Vendas)", value: totalPointsGeneratedFromSales.toFixed(2) + " pts", icon: ArrowUpCircle, color: "text-chart-4" },
+    { title: "Total Pontos Resgatados", value: totalPointsRedeemedOverall.toFixed(2) + " pts", icon: ArrowDownCircle, color: "text-destructive" },
+    { title: "Saldo de Pontos (Gerados - Resgatados)", value: pointsBalance.toFixed(2) + " pts", icon: Scale, color: pointsBalance >= 0 ? "text-chart-2" : "text-destructive" },
   ];
 
   const partnersWithTransactionsData = await Promise.all(
@@ -71,10 +71,8 @@ export default async function ReportsPage() {
         ))}
       </div>
       
-      {/* Seção para Relatório Individual */}
       <IndividualReportControls partners={partners} />
 
-      {/* Seção de Detalhes dos Parceiros (Relatório Geral) */}
       {sortedPartners.length > 0 ? (
         <Card className="bg-card">
           <CardHeader>
@@ -97,7 +95,7 @@ export default async function ReportsPage() {
                         <div className="flex items-center gap-2 text-right">
                            {index < 3 && ( 
                             <Award className={`h-5 w-5 ${
-                                index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-400' : 'text-orange-400'
+                                index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-400' : 'text-orange-400' 
                             }`} />
                            )}
                           <span className="font-semibold text-lg text-primary">{partner.points.toFixed(2)} pts</span>

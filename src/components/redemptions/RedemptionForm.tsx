@@ -60,7 +60,8 @@ export function RedemptionForm() {
   useEffect(() => {
     let debounceTimer: NodeJS.Timeout;
     if (watchedCoupon && watchedCoupon.length >= 3) {
-      setCouponCheckError(null);
+      setCouponCheckError(null); // Clear previous coupon check error
+      form.clearErrors("coupon"); // Clear RHF error for coupon
       debounceTimer = setTimeout(async () => {
         const result = await fetchPartnerPointsAction(watchedCoupon.toUpperCase());
         if (result.points !== null) {
@@ -73,10 +74,11 @@ export function RedemptionForm() {
       }, 500);
     } else {
       setCurrentPartnerPoints(null);
-      setCouponCheckError(null);
+      // Don't clear couponCheckError here if length < 3, let RHF handle min length validation
+      if (watchedCoupon.length === 0) setCouponCheckError(null);
     }
     return () => clearTimeout(debounceTimer);
-  }, [watchedCoupon]);
+  }, [watchedCoupon, form]);
 
 
   useEffect(() => {
@@ -88,34 +90,45 @@ export function RedemptionForm() {
       form.reset();
       setCurrentPartnerPoints(null);
       setCouponCheckError(null);
-    } else if (state.message && !state.success && state.errors) {
+    } else if (!state.success && state.message) {
       const errorFields = state.errors as any;
-       if (errorFields?.coupon?.[0]) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
-       if (errorFields?.pointsToRedeem?.[0]) form.setError("pointsToRedeem", { type: "manual", message: errorFields.pointsToRedeem[0] });
+      let shownFieldErrorToast = false;
 
-       if (!errorFields?.coupon && !errorFields?.pointsToRedeem && state.message && !errorFields?._form?.[0]) {
-          toast({
-            title: "Erro ao resgatar pontos",
-            description: state.message,
-            variant: "destructive",
-          });
-       } else if (errorFields?._form?.[0]) { 
-            toast({
+      if (errorFields) {
+        if (errorFields.coupon?.[0]) {
+          form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
+          // Do not set couponCheckError here, as it's for a different validation
+          shownFieldErrorToast = true;
+        }
+        if (errorFields.pointsToRedeem?.[0]) {
+          form.setError("pointsToRedeem", { type: "manual", message: errorFields.pointsToRedeem[0] });
+          shownFieldErrorToast = true;
+        }
+        if (errorFields._form?.[0]) {
+           toast({
                 title: "Erro",
                 description: errorFields._form[0],
                 variant: "destructive",
             });
-       }
-    } else if (state.message && !state.success && Object.keys(state.errors || {}).length === 0) {
-        toast({
-            title: "Erro",
+           shownFieldErrorToast = true;
+        }
+      }
+      
+      if (!shownFieldErrorToast && state.message) {
+         toast({
+            title: "Erro ao resgatar pontos",
             description: state.message,
             variant: "destructive",
         });
+      }
     }
   }, [state, toast, form]);
 
   const handleFormSubmit = (data: RedemptionFormData) => {
+    if (couponCheckError) { // Prevent submission if there's an active coupon check error
+        form.setError("coupon", {type: "manual", message: couponCheckError});
+        return;
+    }
     const formData = new FormData();
     formData.append("coupon", data.coupon.toUpperCase());
     formData.append("pointsToRedeem", data.pointsToRedeem.toString());
@@ -124,6 +137,8 @@ export function RedemptionForm() {
 
   const handleCouponInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     form.setValue("coupon", event.target.value.toUpperCase(), { shouldValidate: true });
+    // Clear specific coupon check error when user types, RHF will re-validate length
+    if (couponCheckError) setCouponCheckError(null); 
   };
 
 
@@ -147,10 +162,11 @@ export function RedemptionForm() {
             {form.formState.errors.coupon && (
               <p className="text-sm text-destructive">{form.formState.errors.coupon.message}</p>
             )}
-            {state?.errors?.coupon && Array.isArray(state.errors.coupon) && (
+            {/* Display server-side error for coupon only if not already handled by RHF or couponCheckError */}
+            {state?.errors?.coupon && Array.isArray(state.errors.coupon) && !form.formState.errors.coupon && !couponCheckError && (
                <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
             )}
-            {couponCheckError && !form.formState.errors.coupon && (
+            {couponCheckError && !form.formState.errors.coupon && ( // Show couponCheckError if no RHF error for coupon
                 <p className="text-sm text-destructive">{couponCheckError}</p>
             )}
             {currentPartnerPoints !== null && (
@@ -171,13 +187,13 @@ export function RedemptionForm() {
                     {...form.register("pointsToRedeem")}
                     placeholder="50.00"
                     className="pl-9 bg-input"
-                    disabled={currentPartnerPoints === null && !couponCheckError} 
+                    disabled={currentPartnerPoints === null && !couponCheckError && !form.formState.errors.coupon} 
                 />
             </div>
             {form.formState.errors.pointsToRedeem && (
               <p className="text-sm text-destructive">{form.formState.errors.pointsToRedeem.message}</p>
             )}
-            {state?.errors?.pointsToRedeem && Array.isArray(state.errors.pointsToRedeem) &&(
+            {state?.errors?.pointsToRedeem && Array.isArray(state.errors.pointsToRedeem) && !form.formState.errors.pointsToRedeem &&(
                <p className="text-sm text-destructive">{state.errors.pointsToRedeem[0]}</p>
             )}
           </div>

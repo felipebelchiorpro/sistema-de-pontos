@@ -11,10 +11,10 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { registerSaleAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Percent, CheckCircle, ExternalLink } from "lucide-react";
+import { DollarSign, CheckCircle, ExternalLink } from "lucide-react";
 
 const SaleSchema = z.object({
   coupon: z.string().min(1, { message: "Cupom é obrigatório." }),
@@ -80,25 +80,40 @@ export function SalesForm() {
       form.reset();
       setCalculatedDiscountedValue(null);
       setCalculatedPointsGenerated(null);
-    } else if (state.message && !state.success && state.errors) {
-      const errorFields = state.errors as any;
-       if (errorFields?.coupon?.[0]) form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
-       if (errorFields?.totalSaleValue?.[0]) form.setError("totalSaleValue", { type: "manual", message: errorFields.totalSaleValue[0] });
-       if (errorFields?.externalSaleId?.[0]) form.setError("externalSaleId", { type: "manual", message: errorFields.externalSaleId[0] });
-       
-       if (!errorFields?.coupon && !errorFields?.totalSaleValue && !errorFields?.externalSaleId && state.message) {
-         toast({
-            title: "Erro ao registrar venda",
-            description: state.message,
-            variant: "destructive",
-         });
-       }
-    } else if (state.message && !state.success) {
-        toast({
-            title: "Erro",
-            description: state.message,
-            variant: "destructive",
-        });
+    } else if (!state.success && state.message) {
+        const errorFields = state.errors as any;
+        let shownFieldErrorToast = false;
+
+        if (errorFields) {
+            if (errorFields.coupon?.[0]) {
+                form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
+                shownFieldErrorToast = true;
+            }
+            if (errorFields.totalSaleValue?.[0]) {
+                form.setError("totalSaleValue", { type: "manual", message: errorFields.totalSaleValue[0] });
+                shownFieldErrorToast = true;
+            }
+            if (errorFields.externalSaleId?.[0]) {
+                form.setError("externalSaleId", { type: "manual", message: errorFields.externalSaleId[0] });
+                shownFieldErrorToast = true;
+            }
+            if (errorFields._form?.[0]) {
+                toast({
+                    title: "Erro",
+                    description: errorFields._form[0],
+                    variant: "destructive",
+                });
+                shownFieldErrorToast = true;
+            }
+        }
+        
+        if (!shownFieldErrorToast && state.message) {
+            toast({
+                title: "Erro ao registrar venda",
+                description: state.message,
+                variant: "destructive",
+            });
+        }
     }
   }, [state, toast, form]);
 
@@ -137,7 +152,7 @@ export function SalesForm() {
             {form.formState.errors.coupon && (
               <p className="text-sm text-destructive">{form.formState.errors.coupon.message}</p>
             )}
-             {state?.errors?.coupon && Array.isArray(state.errors.coupon) && (
+             {state?.errors?.coupon && Array.isArray(state.errors.coupon) && !form.formState.errors.coupon && (
                <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
             )}
           </div>
@@ -158,7 +173,7 @@ export function SalesForm() {
             {form.formState.errors.totalSaleValue && (
               <p className="text-sm text-destructive">{form.formState.errors.totalSaleValue.message}</p>
             )}
-            {state?.errors?.totalSaleValue && Array.isArray(state.errors.totalSaleValue) && (
+            {state?.errors?.totalSaleValue && Array.isArray(state.errors.totalSaleValue) && !form.formState.errors.totalSaleValue && (
                <p className="text-sm text-destructive">{state.errors.totalSaleValue[0]}</p>
             )}
           </div>
@@ -177,7 +192,7 @@ export function SalesForm() {
             {form.formState.errors.externalSaleId && (
               <p className="text-sm text-destructive">{form.formState.errors.externalSaleId.message}</p>
             )}
-            {state?.errors?.externalSaleId && Array.isArray(state.errors.externalSaleId) && (
+            {state?.errors?.externalSaleId && Array.isArray(state.errors.externalSaleId) && !form.formState.errors.externalSaleId &&(
                <p className="text-sm text-destructive">{state.errors.externalSaleId[0]}</p>
             )}
           </div>
