@@ -49,9 +49,16 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
       }
       return { message: result.message, success: false, errors };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Add Partner Action Error:', error);
-    const errorMessage = 'Ocorreu um erro no servidor. Verifique as configurações do Firebase (variáveis de ambiente e regras de segurança) e tente novamente.';
+    let errorMessage = 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.';
+    
+    if (error.code === 'permission-denied') {
+        errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore no console do Firebase. Elas podem estar bloqueando a escrita.';
+    } else if (error.message && error.message.includes("A conexão com o Firebase não foi inicializada")) {
+        errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel.';
+    }
+
     return {
       message: errorMessage,
       success: false,
@@ -107,9 +114,16 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       }
       return { message: result.message, success: false, errors: fieldErrors };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Register Sale Action Error:', error);
-    const errorMessage = 'Ocorreu um erro no servidor. Verifique as configurações do Firebase (variáveis de ambiente e regras de segurança) e tente novamente.';
+    let errorMessage = 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.';
+    
+    if (error.code === 'permission-denied') {
+        errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore no console do Firebase. Elas podem estar bloqueando a escrita.';
+    } else if (error.message && error.message.includes("A conexão com o Firebase não foi inicializada")) {
+        errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel.';
+    }
+
     return {
       message: errorMessage,
       success: false,
@@ -164,9 +178,16 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
 
       return { message: result.message, success: false, errors: fieldErrors };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Redeem Points Action Error:', error);
-    const errorMessage = 'Ocorreu um erro no servidor. Verifique as configurações do Firebase (variáveis de ambiente e regras de segurança) e tente novamente.';
+    let errorMessage = 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.';
+    
+    if (error.code === 'permission-denied') {
+        errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore no console do Firebase. Elas podem estar bloqueando a escrita.';
+    } else if (error.message && error.message.includes("A conexão com o Firebase não foi inicializada")) {
+        errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel.';
+    }
+
     return {
       message: errorMessage,
       success: false,
