@@ -50,7 +50,7 @@ export default async function DashboardPage() {
     salesByDay.set(dateString, 0);
   }
   
-  (transactions || [])
+  transactions
     .filter(t => t.type === TransactionType.SALE && new Date(t.date) >= thirtyDaysAgo)
     .forEach(t => {
       const dateString = new Date(t.date).toISOString().split('T')[0];
@@ -166,4 +166,3 @@ export default async function DashboardPage() {
     </div>
   );
 }
-

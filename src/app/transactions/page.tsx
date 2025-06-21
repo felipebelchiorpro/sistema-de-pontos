@@ -1,10 +1,7 @@
 
-import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
-import type { Transaction } from "@/types";
 
 export default async function TransactionsPage() {
   const result = await getAllTransactionsWithPartnerDetails();
@@ -26,30 +23,6 @@ export default async function TransactionsPage() {
           <TransactionsTable transactions={transactions} />
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function TransactionsTableSkeleton() {
-  return (
-    <div className="space-y-3">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex justify-between items-center p-3 rounded-md bg-secondary/30">
-          <div className="space-y-1 w-1/4">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-          </div>
-          <div className="space-y-1 w-1/4">
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-          <div className="space-y-1 w-1/4">
-            <Skeleton className="h-4 w-2/3" />
-          </div>
-          <div className="space-y-1 w-1/4 text-right">
-            <Skeleton className="h-5 w-16 ml-auto" />
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

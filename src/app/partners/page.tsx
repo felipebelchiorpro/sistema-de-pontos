@@ -1,9 +1,7 @@
 
 import { PartnerForm } from "@/components/partners/PartnerForm";
 import { PartnersTable } from "@/components/partners/PartnersTable";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getPartners } from "@/lib/mock-data";
-import type { Partner } from "@/types";
 
 export default async function PartnersPage() {
   const result = await getPartners();
@@ -26,26 +24,4 @@ export default async function PartnersPage() {
       </div>
     </div>
   );
-}
-
-function PartnersTableSkeleton() {
-  return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-      <div className="space-y-2 mb-4">
-        <Skeleton className="h-6 w-1/2" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-      <div className="space-y-3">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex justify-between items-center">
-            <div className="space-y-1">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-32" />
-            </div>
-            <Skeleton className="h-6 w-16" />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
 }
