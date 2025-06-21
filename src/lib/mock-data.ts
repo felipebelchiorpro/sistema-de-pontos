@@ -70,8 +70,8 @@ export async function getPartners(): Promise<Partner[]> {
     const q = query(partnersCollection, orderBy('name', 'asc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToPartner);
-  } catch (error: any) {
-    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return [];
     }
@@ -88,8 +88,8 @@ export async function getPartnerByCoupon(coupon: string): Promise<Partner | unde
       return undefined;
     }
     return docToPartner(querySnapshot.docs[0]);
-  } catch (error: any) {
-    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return undefined;
     }
@@ -105,8 +105,8 @@ export async function getPartnerById(id: string): Promise<Partner | undefined> {
       return undefined;
     }
     return docToPartner(docSnap);
-  } catch (error: any) {
-    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return undefined;
     }
@@ -248,8 +248,8 @@ export async function getTransactionsForPartner(partnerId: string): Promise<Tran
     );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToTransaction);
-  } catch (error: any) {
-    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return [];
     }
@@ -263,8 +263,8 @@ export async function getAllTransactionsWithPartnerDetails(): Promise<Transactio
     const q = query(transactionsCollection, orderBy('date', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToTransaction);
-  } catch (error: any) {
-    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return [];
     }
@@ -296,8 +296,8 @@ export async function getTransactionsForPartnerByDateRange(
       
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(docToTransaction);
-    } catch (error: any) {
-      if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
         console.warn(error.message);
         return [];
       }
