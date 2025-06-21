@@ -49,9 +49,11 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     }
 
     if (result.success) {
-      revalidatePath('/partners');
-      revalidatePath('/reports');
       revalidatePath('/');
+      revalidatePath('/partners');
+      revalidatePath('/sales');
+      revalidatePath('/redemptions');
+      revalidatePath('/reports');
       return { title: "Sucesso!", message: result.message, success: true, partner: result.partner };
     } else {
       const errors: Record<string, string[]> = {};
@@ -111,10 +113,12 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     }
 
     if (result.success) {
+      revalidatePath('/');
       revalidatePath('/sales');
       revalidatePath('/partners');
+      revalidatePath('/redemptions');
       revalidatePath('/reports');
-      revalidatePath('/');
+      revalidatePath('/transactions');
       return {
         title: "Sucesso!",
         message: result.message,
@@ -187,10 +191,12 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
 
 
     if (result.success) {
+      revalidatePath('/');
       revalidatePath('/redemptions');
       revalidatePath('/partners');
+      revalidatePath('/sales');
       revalidatePath('/reports');
-      revalidatePath('/');
+      revalidatePath('/transactions');
       return { title: "Sucesso!", message: result.message, success: true, errors: {} };
     } else {
       const fieldErrors: Record<string, string[]> = {};
