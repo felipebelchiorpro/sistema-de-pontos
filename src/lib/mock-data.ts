@@ -3,7 +3,7 @@
 // THIS FILE IS NOW BACKED BY FIREBASE/FIRESTORE.
 // It is no longer "mock" data, but we keep the filename for simplicity.
 
-import { db } from './firebase';
+import { ensureDb } from './firebase';
 import { 
   collection, 
   query, 
@@ -19,20 +19,6 @@ import {
 import type { Partner, Transaction } from '@/types';
 import { TransactionType } from '@/types';
 import { parseISO } from 'date-fns';
-
-const FIREBASE_INIT_ERROR_MSG = "A conexão com o Firebase não foi inicializada.";
-
-// Helper function to ensure Firestore is initialized before use.
-const ensureDb = () => {
-  if (!db) {
-    throw new Error(
-      FIREBASE_INIT_ERROR_MSG +
-      " Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente " +
-      "no seu arquivo .env.local ou nas configurações de ambiente da sua plataforma de hospedagem (Vercel)."
-    );
-  }
-  return db;
-};
 
 // Helper to convert Firestore doc to Partner object
 const docToPartner = (docSnap: any): Partner => {
@@ -71,7 +57,7 @@ export async function getPartners(): Promise<Partner[]> {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToPartner);
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
       console.warn(error.message);
       return [];
     }
@@ -89,7 +75,7 @@ export async function getPartnerByCoupon(coupon: string): Promise<Partner | unde
     }
     return docToPartner(querySnapshot.docs[0]);
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
       console.warn(error.message);
       return undefined;
     }
@@ -106,7 +92,7 @@ export async function getPartnerById(id: string): Promise<Partner | undefined> {
     }
     return docToPartner(docSnap);
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
       console.warn(error.message);
       return undefined;
     }
@@ -249,7 +235,7 @@ export async function getTransactionsForPartner(partnerId: string): Promise<Tran
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToTransaction);
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
       console.warn(error.message);
       return [];
     }
@@ -264,7 +250,7 @@ export async function getAllTransactionsWithPartnerDetails(): Promise<Transactio
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToTransaction);
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
       console.warn(error.message);
       return [];
     }
@@ -297,7 +283,7 @@ export async function getTransactionsForPartnerByDateRange(
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(docToTransaction);
     } catch (error: unknown) {
-      if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+      if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
         console.warn(error.message);
         return [];
       }

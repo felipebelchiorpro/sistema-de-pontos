@@ -1,3 +1,4 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -39,7 +40,7 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     if (result.success) {
       revalidatePath('/partners');
       revalidatePath('/reports');
-      revalidatePath('/'); // Revalidate dashboard as well
+      revalidatePath('/');
       return { title: "Sucesso!", message: result.message, success: true, partner: result.partner };
     } else {
       const errors: Record<string, string[]> = {};
@@ -52,20 +53,19 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     }
   } catch (error: any) {
     console.error('Add Partner Action Error:', error);
-    const errorString = String(error.message || error).toLowerCase();
-    let errorMessage;
+    const errorString = String(error.message || error);
+    let errorMessage = `Ocorreu um erro inesperado: ${errorString}. Verifique o console para mais detalhes.`;
     let errorTitle = "Erro no Servidor";
 
     if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
       errorTitle = "Permissão Negada";
       errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
-    } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
+    } else if (errorString.includes("Configuração do Firebase incompleta")) {
       errorTitle = "Configuração Incompleta";
-      errorMessage = 'O app não se conectou ao Firebase. Adicione as variáveis de ambiente NEXT_PUBLIC_FIREBASE_* na Vercel e faça um novo "Redeploy".';
-    } else {
-      errorMessage = `Ocorreu um erro inesperado: ${error.message || 'Erro desconhecido.'}. Verifique o console para mais detalhes.`;
+      // The error message now contains the list of missing variables, so we can pass it directly.
+      errorMessage = errorString; 
     }
-
+    
     return {
       title: errorTitle,
       message: errorMessage,
@@ -126,18 +126,16 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     }
   } catch (error: any) {
     console.error('Register Sale Action Error:', error);
-    const errorString = String(error.message || error).toLowerCase();
-    let errorMessage;
+    const errorString = String(error.message || error);
+    let errorMessage = `Ocorreu um erro inesperado: ${errorString}. Verifique o console para mais detalhes.`;
     let errorTitle = "Erro no Servidor";
 
     if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
       errorTitle = "Permissão Negada";
       errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
-    } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
+    } else if (errorString.includes("Configuração do Firebase incompleta")) {
       errorTitle = "Configuração Incompleta";
-      errorMessage = 'O app não se conectou ao Firebase. Adicione as variáveis de ambiente NEXT_PUBLIC_FIREBASE_* na Vercel e faça um novo "Redeploy".';
-    } else {
-      errorMessage = `Ocorreu um erro inesperado: ${error.message || 'Erro desconhecido.'}. Verifique o console para mais detalhes.`;
+      errorMessage = errorString;
     }
     
     return {
@@ -198,18 +196,16 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
     }
   } catch (error: any) {
     console.error('Redeem Points Action Error:', error);
-    const errorString = String(error.message || error).toLowerCase();
-    let errorMessage;
+    const errorString = String(error.message || error);
+    let errorMessage = `Ocorreu um erro inesperado: ${errorString}. Verifique o console para mais detalhes.`;
     let errorTitle = "Erro no Servidor";
 
     if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
       errorTitle = "Permissão Negada";
       errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
-    } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
+    } else if (errorString.includes("Configuração do Firebase incompleta")) {
       errorTitle = "Configuração Incompleta";
-      errorMessage = 'O app não se conectou ao Firebase. Adicione as variáveis de ambiente NEXT_PUBLIC_FIREBASE_* na Vercel e faça um novo "Redeploy".';
-    } else {
-      errorMessage = `Ocorreu um erro inesperado: ${error.message || 'Erro desconhecido.'}. Verifique o console para mais detalhes.`;
+      errorMessage = errorString;
     }
 
     return {
