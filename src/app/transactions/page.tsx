@@ -4,9 +4,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
+import { ConfigError } from "@/components/config-error/ConfigError";
+import type { Transaction } from "@/types";
 
 export default async function TransactionsPage() {
-  const transactions = await getAllTransactionsWithPartnerDetails();
+  let transactions: Transaction[] | undefined;
+  let configError: string | null = null;
+
+  try {
+    transactions = await getAllTransactionsWithPartnerDetails();
+  } catch (e: any) {
+    if (e.message?.includes('Configuração do Firebase incompleta')) {
+      configError = e.message;
+    } else {
+      throw e;
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -15,17 +28,19 @@ export default async function TransactionsPage() {
         <p className="text-muted-foreground">Visualize todas as transações registradas no sistema.</p>
       </div>
       
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle>Lista de Transações</CardTitle>
-          <CardDescription>Detalhes de todas as vendas e resgates.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<TransactionsTableSkeleton />}>
-            <TransactionsTable transactions={transactions} />
-          </Suspense>
-        </CardContent>
-      </Card>
+      {configError ? (
+        <ConfigError message={configError} />
+      ) : (
+        <Card className="bg-card">
+          <CardHeader>
+            <CardTitle>Lista de Transações</CardTitle>
+            <CardDescription>Detalhes de todas as vendas e resgates.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TransactionsTable transactions={transactions!} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

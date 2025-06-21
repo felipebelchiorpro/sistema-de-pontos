@@ -8,12 +8,9 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Partner } from "@/types";
-import { getPartners } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 
-export async function PartnersTable() {
-  const partners = await getPartners();
-
+export function PartnersTable({ partners }: { partners: Partner[] }) {
   return (
     <Card className="bg-card">
       <CardHeader>

@@ -1,9 +1,24 @@
 import { PartnerForm } from "@/components/partners/PartnerForm";
 import { PartnersTable } from "@/components/partners/PartnersTable";
-import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getPartners } from "@/lib/mock-data";
+import { ConfigError } from "@/components/config-error/ConfigError";
+import type { Partner } from "@/types";
 
-export default function PartnersPage() {
+export default async function PartnersPage() {
+  let partners: Partner[] | undefined;
+  let configError: string | null = null;
+
+  try {
+    partners = await getPartners();
+  } catch (e: any) {
+     if (e.message?.includes('Configuração do Firebase incompleta')) {
+      configError = e.message;
+    } else {
+      throw e;
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -11,16 +26,18 @@ export default function PartnersPage() {
         <p className="text-muted-foreground">Adicione novos parceiros e visualize os parceiros existentes.</p>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-1">
-          <PartnerForm />
+      {configError ? (
+        <ConfigError message={configError} />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-1">
+            <PartnerForm />
+          </div>
+          <div className="lg:col-span-2">
+            <PartnersTable partners={partners!} />
+          </div>
         </div>
-        <div className="lg:col-span-2">
-          <Suspense fallback={<PartnersTableSkeleton />}>
-            <PartnersTable />
-          </Suspense>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

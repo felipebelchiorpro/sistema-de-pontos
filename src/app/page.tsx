@@ -4,10 +4,30 @@ import { BarChart3, Users, ShoppingCart, Gift } from "lucide-react";
 import Link from "next/link";
 import { getPartners, getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { TransactionType } from "@/types";
+import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function DashboardPage() {
-  const partners = await getPartners();
-  const transactions = await getAllTransactionsWithPartnerDetails();
+  let partners, transactions;
+  let configError: string | null = null;
+
+  try {
+    const [partnersData, transactionsData] = await Promise.all([
+      getPartners(),
+      getAllTransactionsWithPartnerDetails()
+    ]);
+    partners = partnersData;
+    transactions = transactionsData;
+  } catch (e: any) {
+    if (e.message?.includes('Configuração do Firebase incompleta')) {
+      configError = e.message;
+    } else {
+      throw e;
+    }
+  }
+
+  if (configError) {
+    return <ConfigError message={configError} />;
+  }
 
   const totalPartners = partners.length;
   const totalSalesValue = transactions

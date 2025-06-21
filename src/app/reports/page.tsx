@@ -1,5 +1,4 @@
 
-
 import { getPartners, getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -10,10 +9,28 @@ import { Badge } from "@/components/ui/badge";
 import { UserCircle, Award, Coins, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react";
 import type { Partner, Transaction } from "@/types";
 import { TransactionType } from "@/types";
+import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function ReportsPage() {
-  const partners = await getPartners();
-  const allTransactions = await getAllTransactionsWithPartnerDetails();
+  let partners: Partner[], allTransactions: Transaction[];
+  let configError: string | null = null;
+
+  try {
+    [partners, allTransactions] = await Promise.all([
+      getPartners(),
+      getAllTransactionsWithPartnerDetails()
+    ]);
+  } catch(e: any) {
+    if (e.message?.includes('Configuração do Firebase incompleta')) {
+      configError = e.message;
+    } else {
+      throw e;
+    }
+  }
+
+  if (configError) {
+    return <ConfigError message={configError} />;
+  }
   
   const sortedPartners = [...partners].sort((a, b) => b.points - a.points);
 

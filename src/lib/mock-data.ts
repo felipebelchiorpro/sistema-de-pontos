@@ -51,53 +51,29 @@ const docToTransaction = (docSnap: any): Transaction => {
 };
 
 export async function getPartners(): Promise<Partner[]> {
-  try {
-    const partnersCollection = collection(ensureDb(), 'partners_v2');
-    const q = query(partnersCollection, orderBy('name', 'asc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(docToPartner);
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
-      console.warn(error.message);
-      return [];
-    }
-    throw error;
-  }
+  const partnersCollection = collection(ensureDb(), 'partners_v2');
+  const q = query(partnersCollection, orderBy('name', 'asc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(docToPartner);
 }
 
 export async function getPartnerByCoupon(coupon: string): Promise<Partner | undefined> {
-   try {
-    const partnersCollection = collection(ensureDb(), 'partners_v2');
-    const q = query(partnersCollection, where('coupon', '==', coupon.toUpperCase()));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
-      return undefined;
-    }
-    return docToPartner(querySnapshot.docs[0]);
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
-      console.warn(error.message);
-      return undefined;
-    }
-    throw error;
+  const partnersCollection = collection(ensureDb(), 'partners_v2');
+  const q = query(partnersCollection, where('coupon', '==', coupon.toUpperCase()));
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    return undefined;
   }
+  return docToPartner(querySnapshot.docs[0]);
 }
 
 export async function getPartnerById(id: string): Promise<Partner | undefined> {
-  try {
-    const docRef = doc(ensureDb(), 'partners_v2', id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
-      return undefined;
-    }
-    return docToPartner(docSnap);
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
-      console.warn(error.message);
-      return undefined;
-    }
-    throw error;
+  const docRef = doc(ensureDb(), 'partners_v2', id);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) {
+    return undefined;
   }
+  return docToPartner(docSnap);
 }
 
 export async function addPartner(name: string, coupon: string): Promise<{ success: boolean; message: string; partner?: Partner }> {
@@ -225,37 +201,21 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
 }
 
 export async function getTransactionsForPartner(partnerId: string): Promise<Transaction[]> {
-   try {
-    const transactionsCollection = collection(ensureDb(), 'transactions_v2');
-    const q = query(
-      transactionsCollection, 
-      where('partnerId', '==', partnerId),
-      orderBy('date', 'desc')
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(docToTransaction);
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
-      console.warn(error.message);
-      return [];
-    }
-    throw error;
-  }
+  const transactionsCollection = collection(ensureDb(), 'transactions_v2');
+  const q = query(
+    transactionsCollection, 
+    where('partnerId', '==', partnerId),
+    orderBy('date', 'desc')
+  );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(docToTransaction);
 }
 
 export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
-   try {
-    const transactionsCollection = collection(ensureDb(), 'transactions_v2');
-    const q = query(transactionsCollection, orderBy('date', 'desc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(docToTransaction);
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
-      console.warn(error.message);
-      return [];
-    }
-    throw error;
-  }
+  const transactionsCollection = collection(ensureDb(), 'transactions_v2');
+  const q = query(transactionsCollection, orderBy('date', 'desc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(docToTransaction);
 }
 
 export async function getTransactionsForPartnerByDateRange(
@@ -263,30 +223,22 @@ export async function getTransactionsForPartnerByDateRange(
   startDateString?: string,
   endDateString?: string
 ): Promise<Transaction[]> {
-    try {
-      const transactionsCollection = collection(ensureDb(), 'transactions_v2');
-      let constraints = [where('partnerId', '==', partnerId)];
+  const transactionsCollection = collection(ensureDb(), 'transactions_v2');
+  let constraints = [where('partnerId', '==', partnerId)];
 
-      if (startDateString) {
-        constraints.push(where('date', '>=', Timestamp.fromDate(parseISO(startDateString))));
-      }
-      if (endDateString) {
-        constraints.push(where('date', '<=', Timestamp.fromDate(parseISO(endDateString))));
-      }
+  if (startDateString) {
+    constraints.push(where('date', '>=', Timestamp.fromDate(parseISO(startDateString))));
+  }
+  if (endDateString) {
+    constraints.push(where('date', '<=', Timestamp.fromDate(parseISO(endDateString))));
+  }
 
-      const q = query(
-        transactionsCollection, 
-        ...constraints,
-        orderBy('date', 'desc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(docToTransaction);
-    } catch (error: unknown) {
-      if (error instanceof Error && error.message.includes('Configuração do Firebase incompleta')) {
-        console.warn(error.message);
-        return [];
-      }
-      throw error;
-    }
+  const q = query(
+    transactionsCollection, 
+    ...constraints,
+    orderBy('date', 'desc')
+  );
+  
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(docToTransaction);
 }
