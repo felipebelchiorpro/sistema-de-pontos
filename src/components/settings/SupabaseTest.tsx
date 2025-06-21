@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -27,10 +28,9 @@ export function SupabaseTest() {
   return (
     <Card className="bg-card">
       <CardHeader>
-        <CardTitle>Teste de Conexão com Supabase</CardTitle>
+        <CardTitle>Diagnóstico Detalhado da Conexão com Supabase</CardTitle>
         <CardDescription>
-          Clique no botão abaixo para verificar se a aplicação consegue se conectar ao seu banco de dados Supabase. 
-          Isso ajuda a confirmar se as suas variáveis de ambiente na Vercel e as políticas de RLS estão corretas.
+          Este teste executa uma operação real de leitura no banco de dados. Ele ajuda a diagnosticar problemas que vão além da simples configuração de variáveis, como falhas nas Regras de Segurança (RLS) ou ausência de tabelas.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -41,7 +41,7 @@ export function SupabaseTest() {
               Testando...
             </>
           ) : (
-            "Testar Conexão com Supabase"
+            "Executar Teste de Conexão e Leitura"
           )}
         </Button>
         
@@ -49,7 +49,7 @@ export function SupabaseTest() {
           <Alert variant={result.success ? "default" : "destructive"} className={result.success ? "border-green-500/50 bg-green-500/10 text-foreground" : ""}>
             {result.success ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertTriangle className="h-4 w-4" />}
             <AlertTitle className={result.success ? "text-green-400" : ""}>
-                {result.success ? "Sucesso na Conexão" : "Falha na Conexão"}
+                {result.success ? "Sucesso na Conexão" : "Falha no Teste"}
             </AlertTitle>
             <AlertDescription className="font-mono text-xs mt-2">
               {result.message}
