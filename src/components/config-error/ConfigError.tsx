@@ -7,6 +7,8 @@ interface ConfigErrorProps {
 }
 
 export function ConfigError({ message }: ConfigErrorProps) {
+  const isSupabaseError = message.toLowerCase().includes('supabase');
+
   return (
     <div className="flex items-center justify-center py-12">
         <Card className="w-full max-w-2xl bg-destructive/10 border-destructive">
@@ -15,10 +17,10 @@ export function ConfigError({ message }: ConfigErrorProps) {
                     <AlertTriangle className="h-8 w-8 text-destructive" />
                 </div>
                 <CardTitle className="text-destructive mt-4 text-2xl">
-                    Erro de Configuração do Firebase
+                    Erro de Configuração do Backend
                 </CardTitle>
                 <CardDescription className="text-destructive/80">
-                    A aplicação não conseguiu se conectar ao banco de dados.
+                    A aplicação não conseguiu se conectar ao banco de dados Supabase.
                 </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -26,7 +28,7 @@ export function ConfigError({ message }: ConfigErrorProps) {
                     <p className="text-sm text-foreground font-mono">{message}</p>
                 </div>
                 <p className="text-muted-foreground mb-4">
-                    Isso acontece porque as variáveis de ambiente do Firebase não foram configuradas no seu projeto Vercel. Siga o passo a passo para adicioná-las.
+                    Isso acontece porque as variáveis de ambiente do Supabase não foram configuradas no seu projeto Vercel. Siga o passo a passo para adicioná-las.
                 </p>
                 <Button asChild variant="destructive">
                     <a 

@@ -3,8 +3,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { getDb } from './firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import {
   addPartner as dbAddPartner,
   registerSale as dbRegisterSale,
@@ -14,6 +12,7 @@ import {
   getTransactionsForPartnerByDateRange,
 } from './mock-data';
 import type { Partner, Transaction } from '@/types';
+import { getSupabase } from './supabase';
 
 const PartnerSchema = z.object({
   name: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres.' }),
@@ -168,7 +167,6 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
   
   try {
     const { coupon, pointsToRedeem } = validatedFields.data;
-    // The redeemPoints function in mock-data now handles all logic, including checks
     const result = await dbRedeemPoints(coupon.toUpperCase(), pointsToRedeem);
     
     if (result.error) {
@@ -195,7 +193,6 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
       revalidatePath('/');
       return { title: "Sucesso!", message: result.message, success: true, errors: {} };
     } else {
-      // This case should be mostly covered by the result.error check now, but is kept as a fallback.
       const fieldErrors: Record<string, string[]> = {};
       if (result.message.toLowerCase().includes("cupom")) fieldErrors.coupon = [result.message];
       else if (result.message.toLowerCase().includes("pontos")) fieldErrors.pointsToRedeem = [result.message];
@@ -256,30 +253,34 @@ export async function fetchIndividualPartnerReportDataAction(
   }
 }
 
-export async function testFirebaseConnectionAction(): Promise<{ success: boolean; message: string; }> {
-  const { db, error } = getDb();
+export async function testSupabaseConnectionAction(): Promise<{ success: boolean; message: string; }> {
+  const { supabase, error } = getSupabase();
 
   if (error) {
-    return { success: false, message: `A inicialização do Firebase falhou. Motivo: ${error}` };
+    return { success: false, message: `A inicialização do Supabase falhou. Motivo: ${error}` };
   }
   
-  if (!db) {
-     return { success: false, message: 'A instância do banco de dados não está disponível, mas nenhum erro explícito foi retornado. Isso é um estado inesperado.' };
+  if (!supabase) {
+     return { success: false, message: 'A instância do Supabase não está disponível, mas nenhum erro explícito foi retornado. Isso é um estado inesperado.' };
   }
 
   try {
-    const testDocRef = doc(db, 'internal_health_check', 'doc1');
-    await getDoc(testDocRef);
+    // Attempt to fetch a single row. This tests connection, URL, anon key, and RLS policies for read.
+    const { error: dbError } = await supabase.from('partners_v2').select('id').limit(1);
+
+    if (dbError) {
+      if (dbError.message.includes('JWT') || dbError.message.includes('anon key')) {
+        return { success: false, message: `Erro de autenticação com o Supabase: ${dbError.message}. Verifique se a 'NEXT_PUBLIC_SUPABASE_ANON_KEY' está correta.` };
+      }
+      if (dbError.message.includes('fetch')) {
+         return { success: false, message: `Erro de rede ao conectar ao Supabase: ${dbError.message}. Verifique se a 'NEXT_PUBLIC_SUPABASE_URL' está correta e se não há problemas de CORS.` };
+      }
+       return { success: false, message: `Erro ao comunicar com o Supabase: ${dbError.message}. Verifique se a tabela 'partners_v2' existe e se as políticas de RLS permitem leitura.` };
+    }
     
-    return { success: true, message: 'Conexão com o Firebase estabelecida com sucesso! A aplicação consegue inicializar o SDK e se comunicar com o Firestore.' };
+    return { success: true, message: 'Conexão com o Supabase estabelecida com sucesso!' };
 
   } catch (e: any) {
-    let errorMessage = `Erro ao comunicar com o Firestore: ${e.message}`;
-    if (e.code === 'permission-denied' || e.message.toLowerCase().includes('permission-denied')) {
-        errorMessage = "Sucesso ao inicializar o SDK, mas as Regras de Segurança do Firestore estão bloqueando o acesso. Verifique suas regras no Console do Firebase para permitir leituras (geralmente, `allow read, write: if true;` para desenvolvimento).";
-    } else if (e.message.toLowerCase().includes('failed to fetch')) {
-        errorMessage = "Falha de rede ao tentar se conectar ao Firestore. Verifique sua conexão com a internet e as configurações de firewall.";
-    }
-    return { success: false, message: errorMessage };
+    return { success: false, message: `Erro inesperado durante o teste: ${e.message}` };
   }
 }

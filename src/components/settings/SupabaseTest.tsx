@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { testFirebaseConnectionAction } from "@/lib/actions";
+import { testSupabaseConnectionAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -12,14 +12,14 @@ interface TestResult {
   message: string;
 }
 
-export function FirebaseTest() {
+export function SupabaseTest() {
   const [result, setResult] = useState<TestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleTestConnection = async () => {
     setIsLoading(true);
     setResult(null);
-    const testResult = await testFirebaseConnectionAction();
+    const testResult = await testSupabaseConnectionAction();
     setResult(testResult);
     setIsLoading(false);
   };
@@ -27,10 +27,10 @@ export function FirebaseTest() {
   return (
     <Card className="bg-card">
       <CardHeader>
-        <CardTitle>Teste de Conexão com Firebase</CardTitle>
+        <CardTitle>Teste de Conexão com Supabase</CardTitle>
         <CardDescription>
-          Clique no botão abaixo para verificar se a aplicação consegue se conectar ao seu banco de dados Firebase. 
-          Isso ajuda a confirmar se as suas variáveis de ambiente na Vercel estão corretas.
+          Clique no botão abaixo para verificar se a aplicação consegue se conectar ao seu banco de dados Supabase. 
+          Isso ajuda a confirmar se as suas variáveis de ambiente na Vercel e as políticas de RLS estão corretas.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -41,7 +41,7 @@ export function FirebaseTest() {
               Testando...
             </>
           ) : (
-            "Testar Conexão com Firebase"
+            "Testar Conexão com Supabase"
           )}
         </Button>
         
