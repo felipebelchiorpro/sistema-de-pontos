@@ -1,4 +1,5 @@
 
+
 import { getPartners, getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -32,12 +33,16 @@ export default async function ReportsPage() {
     { title: "Saldo de Pontos (Gerados - Resgatados)", value: pointsBalance.toFixed(2) + " pts", icon: Scale, color: pointsBalance >= 0 ? "text-chart-2" : "text-destructive" },
   ];
 
-  const partnersWithTransactionsData = await Promise.all(
-    sortedPartners.map(async (partner) => {
-      const transactions = await getTransactionsForPartner(partner.id);
-      return { partner, transactions };
-    })
-  );
+  // More efficient data preparation for the PDF exporter and Accordion
+  const transactionsByPartner = allTransactions.reduce<Record<string, Transaction[]>>((acc, t) => {
+    (acc[t.partnerId] = acc[t.partnerId] || []).push(t);
+    return acc;
+  }, {});
+
+  const partnersWithTransactionsData = sortedPartners.map(partner => ({
+    partner,
+    transactions: transactionsByPartner[partner.id] || []
+  }));
 
   const summaryCardsDataForPdf = summaryCards.map(s => ({ title: s.title, value: s.value }));
 

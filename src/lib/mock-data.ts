@@ -1,56 +1,102 @@
+
 // src/lib/mock-data.ts
-// This file simulates a server-side data store.
-// In a real application, this would interact with a database.
+// THIS FILE IS NOW BACKED BY FIREBASE/FIRESTORE.
+// It is no longer "mock" data, but we keep the filename for simplicity.
+
+import { db } from './firebase';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  doc, 
+  getDoc, 
+  addDoc, 
+  runTransaction, 
+  orderBy, 
+  Timestamp,
+} from 'firebase/firestore';
 import type { Partner, Transaction } from '@/types';
 import { TransactionType } from '@/types';
-import { parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { parseISO } from 'date-fns';
 
-// Ensure crypto.randomUUID is available (Node.js 16+)
-const generateUUID = (): string => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Basic fallback for environments where crypto.randomUUID might not be available during generation time (though server actions should have it)
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+
+const partnersCollection = collection(db, 'partners');
+const transactionsCollection = collection(db, 'transactions');
+
+// Helper to convert Firestore doc to Partner object
+const docToPartner = (docSnap: any): Partner => {
+  const data = docSnap.data();
+  return {
+    id: docSnap.id,
+    name: data.name || '',
+    coupon: data.coupon || '',
+    points: data.points || 0,
+  };
 };
 
-
-let partners: Partner[] = [];
-
-let transactions: Transaction[] = [];
+// Helper to convert Firestore doc to Transaction object
+const docToTransaction = (docSnap: any): Transaction => {
+  const data = docSnap.data();
+  // Firestore timestamps need to be converted to JS Date objects then to ISO strings
+  const date = data.date instanceof Timestamp ? data.date.toDate().toISOString() : new Date().toISOString();
+  return {
+    id: docSnap.id,
+    partnerId: data.partnerId,
+    partnerName: data.partnerName,
+    partnerCoupon: data.partnerCoupon,
+    type: data.type,
+    amount: data.amount,
+    originalSaleValue: data.originalSaleValue,
+    discountedValue: data.discountedValue,
+    externalSaleId: data.externalSaleId,
+    date: date,
+  };
+};
 
 export async function getPartners(): Promise<Partner[]> {
-  return JSON.parse(JSON.stringify(partners)); // Deep copy
+  const q = query(partnersCollection, orderBy('name', 'asc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(docToPartner);
 }
 
 export async function getPartnerByCoupon(coupon: string): Promise<Partner | undefined> {
-  const partner = partners.find(p => p.coupon.toUpperCase() === coupon.toUpperCase());
-  return partner ? JSON.parse(JSON.stringify(partner)) : undefined;
+  const q = query(partnersCollection, where('coupon', '==', coupon.toUpperCase()));
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    return undefined;
+  }
+  return docToPartner(querySnapshot.docs[0]);
 }
 
 export async function getPartnerById(id: string): Promise<Partner | undefined> {
-  const partner = partners.find(p => p.id === id);
-  return partner ? JSON.parse(JSON.stringify(partner)) : undefined;
+  const docRef = doc(db, 'partners', id);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) {
+    return undefined;
+  }
+  return docToPartner(docSnap);
 }
 
 export async function addPartner(name: string, coupon: string): Promise<{ success: boolean; message: string; partner?: Partner }> {
-  if (partners.some(p => p.coupon.toUpperCase() === coupon.toUpperCase())) {
+  const existingPartner = await getPartnerByCoupon(coupon);
+  if (existingPartner) {
     return { success: false, message: 'Cupom já existe.' };
   }
   if (!name.trim() || !coupon.trim()) {
     return { success: false, message: 'Nome e cupom são obrigatórios.' };
   }
-  const newPartner: Partner = {
-    id: generateUUID(),
+
+  const newPartnerData = {
     name,
     coupon: coupon.toUpperCase(),
     points: 0,
   };
-  partners.push(newPartner);
-  return { success: true, message: 'Parceiro cadastrado com sucesso.', partner: JSON.parse(JSON.stringify(newPartner)) };
+
+  const docRef = await addDoc(partnersCollection, newPartnerData);
+  const newPartner = await getPartnerById(docRef.id);
+  
+  return { success: true, message: 'Parceiro cadastrado com sucesso.', partner: newPartner! };
 }
 
 export async function registerSale(
@@ -58,80 +104,114 @@ export async function registerSale(
   totalSaleValue: number,
   externalSaleId?: string
 ): Promise<{ success: boolean; message: string; pointsGenerated?: number; discountedValue?: number }> {
-  const partnerIndex = partners.findIndex(p => p.coupon.toUpperCase() === coupon.toUpperCase());
-  if (partnerIndex === -1) {
+  const partner = await getPartnerByCoupon(coupon);
+  if (!partner) {
     return { success: false, message: 'Cupom inválido.' };
   }
   if (isNaN(totalSaleValue) || totalSaleValue <= 0) {
     return { success: false, message: 'Valor da venda deve ser um número positivo.' };
   }
 
-  const partner = partners[partnerIndex];
   const discount = totalSaleValue * 0.075;
   const pointsGenerated = parseFloat((totalSaleValue * 0.075).toFixed(2));
   const discountedValue = parseFloat((totalSaleValue - discount).toFixed(2));
 
-  const updatedPartner = { ...partner, points: parseFloat((partner.points + pointsGenerated).toFixed(2)) };
-  partners[partnerIndex] = updatedPartner;
+  const partnerRef = doc(db, 'partners', partner.id);
 
+  try {
+    await runTransaction(db, async (transaction) => {
+      const partnerDoc = await transaction.get(partnerRef);
+      if (!partnerDoc.exists()) {
+        throw new Error("Parceiro não encontrado.");
+      }
 
-  const newTransaction: Transaction = {
-    id: generateUUID(),
-    partnerId: partner.id,
-    type: TransactionType.SALE,
-    amount: pointsGenerated,
-    originalSaleValue: totalSaleValue,
-    discountedValue: discountedValue,
-    externalSaleId: externalSaleId,
-    date: new Date().toISOString(),
-    partnerName: partner.name,
-    partnerCoupon: partner.coupon,
-  };
-  transactions.push(newTransaction);
+      const currentPoints = partnerDoc.data().points || 0;
+      const newPoints = parseFloat((currentPoints + pointsGenerated).toFixed(2));
+      transaction.update(partnerRef, { points: newPoints });
 
-  return { success: true, message: 'Venda registrada com sucesso.', pointsGenerated, discountedValue };
+      const newTransactionData = {
+        partnerId: partner.id,
+        type: TransactionType.SALE,
+        amount: pointsGenerated,
+        originalSaleValue: totalSaleValue,
+        discountedValue: discountedValue,
+        externalSaleId: externalSaleId || null,
+        date: Timestamp.now(),
+        partnerName: partner.name,
+        partnerCoupon: partner.coupon,
+      };
+      // Firestore will auto-generate an ID for the new document
+      transaction.set(doc(transactionsCollection), newTransactionData);
+    });
+    return { success: true, message: 'Venda registrada com sucesso.', pointsGenerated, discountedValue };
+  } catch (e) {
+    console.error("Transaction failed: ", e);
+    return { success: false, message: 'Ocorreu um erro ao registrar a venda.' };
+  }
 }
 
 export async function redeemPoints(coupon: string, pointsToRedeem: number): Promise<{ success: boolean; message: string }> {
-  const partnerIndex = partners.findIndex(p => p.coupon.toUpperCase() === coupon.toUpperCase());
-  if (partnerIndex === -1) {
+  const partner = await getPartnerByCoupon(coupon);
+  if (!partner) {
     return { success: false, message: 'Cupom inválido.' };
   }
   if (isNaN(pointsToRedeem) || pointsToRedeem <= 0) {
     return { success: false, message: 'Pontos a resgatar devem ser um número positivo.' };
   }
   
-  const partner = partners[partnerIndex];
   pointsToRedeem = parseFloat(pointsToRedeem.toFixed(2));
 
-  if (partner.points < pointsToRedeem) {
-    return { success: false, message: 'Pontos insuficientes.' };
+  const partnerRef = doc(db, 'partners', partner.id);
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const partnerDoc = await transaction.get(partnerRef);
+      if (!partnerDoc.exists()) {
+        throw new Error("Parceiro não encontrado.");
+      }
+
+      const currentPoints = partnerDoc.data().points || 0;
+      if (currentPoints < pointsToRedeem) {
+        throw new Error("Pontos insuficientes.");
+      }
+      
+      const newPoints = parseFloat((currentPoints - pointsToRedeem).toFixed(2));
+      transaction.update(partnerRef, { points: newPoints });
+
+      const newTransactionData = {
+        partnerId: partner.id,
+        type: TransactionType.REDEMPTION,
+        amount: pointsToRedeem,
+        date: Timestamp.now(),
+        partnerName: partner.name,
+        partnerCoupon: partner.coupon,
+      };
+      transaction.set(doc(transactionsCollection), newTransactionData);
+    });
+     return { success: true, message: 'Pontos resgatados com sucesso.' };
+  } catch (e: any) {
+    console.error("Transaction failed: ", e.message);
+    if (e.message.includes("Pontos insuficientes")) {
+         return { success: false, message: 'Pontos insuficientes.' };
+    }
+    return { success: false, message: 'Ocorreu um erro ao resgatar os pontos.' };
   }
-
-  const updatedPartner = { ...partner, points: parseFloat((partner.points - pointsToRedeem).toFixed(2)) };
-  partners[partnerIndex] = updatedPartner;
-
-  const newTransaction: Transaction = {
-    id: generateUUID(),
-    partnerId: partner.id,
-    type: TransactionType.REDEMPTION,
-    amount: pointsToRedeem, 
-    date: new Date().toISOString(),
-    partnerName: partner.name,
-    partnerCoupon: partner.coupon,
-  };
-  transactions.push(newTransaction);
-
-  return { success: true, message: 'Pontos resgatados com sucesso.' };
 }
 
 export async function getTransactionsForPartner(partnerId: string): Promise<Transaction[]> {
-  const partner = await getPartnerById(partnerId);
-  if (!partner) return [];
-  
-  return transactions
-    .filter(t => t.partnerId === partnerId)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const q = query(
+    transactionsCollection, 
+    where('partnerId', '==', partnerId),
+    orderBy('date', 'desc')
+  );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(docToTransaction);
+}
+
+export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
+  const q = query(transactionsCollection, orderBy('date', 'desc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(docToTransaction);
 }
 
 export async function getTransactionsForPartnerByDateRange(
@@ -139,35 +219,21 @@ export async function getTransactionsForPartnerByDateRange(
   startDateString?: string,
   endDateString?: string
 ): Promise<Transaction[]> {
-  const partner = await getPartnerById(partnerId);
-  if (!partner) return [];
+    let constraints = [where('partnerId', '==', partnerId)];
 
-  let partnerTransactions = transactions.filter(t => t.partnerId === partnerId);
+    if (startDateString) {
+      constraints.push(where('date', '>=', Timestamp.fromDate(parseISO(startDateString))));
+    }
+    if (endDateString) {
+      constraints.push(where('date', '<=', Timestamp.fromDate(parseISO(endDateString))));
+    }
 
-  const startDate = startDateString ? startOfDay(parseISO(startDateString)) : null;
-  const endDate = endDateString ? endOfDay(parseISO(endDateString)) : null;
-
-  if (startDate || endDate) {
-    partnerTransactions = partnerTransactions.filter(t => {
-      const transactionDate = parseISO(t.date);
-      if (startDate && endDate) {
-        return isWithinInterval(transactionDate, { start: startDate, end: endDate });
-      }
-      if (startDate) {
-        return transactionDate >= startDate;
-      }
-      if (endDate) {
-        return transactionDate <= endDate;
-      }
-      return true; // Should not happen if startDate or endDate is defined
-    });
-  }
-
-  return partnerTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-}
-
-
-export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
-  const allTransactions = JSON.parse(JSON.stringify(transactions)) as Transaction[];
-  return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const q = query(
+      transactionsCollection, 
+      ...constraints,
+      orderBy('date', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(docToTransaction);
 }
