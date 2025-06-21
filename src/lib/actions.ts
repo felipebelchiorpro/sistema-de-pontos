@@ -25,7 +25,8 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
 
   if (!validatedFields.success) {
     return {
-      message: 'Erro de validação.',
+      title: "Erro de Validação",
+      message: 'Dados inválidos.',
       errors: validatedFields.error.flatten().fieldErrors,
       success: false,
     };
@@ -39,7 +40,7 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
       revalidatePath('/partners');
       revalidatePath('/reports');
       revalidatePath('/'); // Revalidate dashboard as well
-      return { message: result.message, success: true, partner: result.partner };
+      return { title: "Sucesso!", message: result.message, success: true, partner: result.partner };
     } else {
       const errors: Record<string, string[]> = {};
       if (result.message.toLowerCase().includes('cupom')) {
@@ -47,22 +48,26 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
       } else {
         errors._form = [result.message]; 
       }
-      return { message: result.message, success: false, errors };
+      return { title: "Erro ao Adicionar", message: result.message, success: false, errors };
     }
   } catch (error: any) {
     console.error('Add Partner Action Error:', error);
     const errorString = String(error.message || error).toLowerCase();
     let errorMessage;
+    let errorTitle = "Erro no Servidor";
 
     if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
-      errorMessage = 'Erro de permissão. Verifique as Regras de Segurança do seu banco de dados Firestore. Elas provavelmente estão bloqueando a escrita. Certifique-se que "allow write: if true;" está ativo.';
+      errorTitle = "Permissão Negada";
+      errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
     } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
-      errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel e faça um novo deploy.';
+      errorTitle = "Configuração Incompleta";
+      errorMessage = 'O app não se conectou ao Firebase. Adicione as variáveis de ambiente NEXT_PUBLIC_FIREBASE_* na Vercel e faça um novo "Redeploy".';
     } else {
-      errorMessage = `Ocorreu um erro no servidor: ${error.message || 'Erro desconhecido.'}. Verifique se a API do Firestore está ativada no seu projeto Google Cloud.`;
+      errorMessage = `Ocorreu um erro inesperado: ${error.message || 'Erro desconhecido.'}. Verifique o console para mais detalhes.`;
     }
 
     return {
+      title: errorTitle,
       message: errorMessage,
       success: false,
       errors: { _form: [errorMessage] }
@@ -85,7 +90,8 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
 
   if (!validatedFields.success) {
     return {
-      message: 'Erro de validação.',
+      title: "Erro de Validação",
+      message: 'Dados inválidos.',
       errors: validatedFields.error.flatten().fieldErrors,
       success: false,
     };
@@ -101,6 +107,7 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       revalidatePath('/reports');
       revalidatePath('/');
       return {
+        title: "Sucesso!",
         message: result.message,
         success: true,
         pointsGenerated: result.pointsGenerated,
@@ -115,22 +122,26 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       } else {
         fieldErrors._form = [result.message]; 
       }
-      return { message: result.message, success: false, errors: fieldErrors };
+      return { title: "Erro na Venda", message: result.message, success: false, errors: fieldErrors };
     }
   } catch (error: any) {
     console.error('Register Sale Action Error:', error);
     const errorString = String(error.message || error).toLowerCase();
     let errorMessage;
+    let errorTitle = "Erro no Servidor";
 
     if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
-      errorMessage = 'Erro de permissão. Verifique as Regras de Segurança do seu banco de dados Firestore. Elas provavelmente estão bloqueando a escrita. Certifique-se que "allow write: if true;" está ativo.';
+      errorTitle = "Permissão Negada";
+      errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
     } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
-      errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel e faça um novo deploy.';
+      errorTitle = "Configuração Incompleta";
+      errorMessage = 'O app não se conectou ao Firebase. Adicione as variáveis de ambiente NEXT_PUBLIC_FIREBASE_* na Vercel e faça um novo "Redeploy".';
     } else {
-      errorMessage = `Ocorreu um erro no servidor: ${error.message || 'Erro desconhecido.'}. Verifique se a API do Firestore está ativada no seu projeto Google Cloud.`;
+      errorMessage = `Ocorreu um erro inesperado: ${error.message || 'Erro desconhecido.'}. Verifique o console para mais detalhes.`;
     }
     
     return {
+      title: errorTitle,
       message: errorMessage,
       success: false,
       errors: { _form: [errorMessage] }
@@ -151,7 +162,8 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
 
   if (!validatedFields.success) {
     return {
-      message: 'Erro de validação.',
+      title: "Erro de Validação",
+      message: 'Dados inválidos.',
       errors: validatedFields.error.flatten().fieldErrors,
       success: false,
     };
@@ -162,10 +174,10 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
     const partner = await getPartnerByCoupon(coupon.toUpperCase());
 
     if (!partner) {
-      return { message: 'Cupom inválido.', success: false, errors: { coupon: ['Cupom inválido.'] } };
+      return { title: "Erro de Resgate", message: 'Cupom inválido.', success: false, errors: { coupon: ['Cupom inválido.'] } };
     }
     if (partner.points < pointsToRedeem) {
-      return { message: 'Pontos insuficientes para resgate.', success: false, errors: { pointsToRedeem: ['Pontos insuficientes para resgate.'] } };
+      return { title: "Erro de Resgate", message: 'Pontos insuficientes para resgate.', success: false, errors: { pointsToRedeem: ['Pontos insuficientes para resgate.'] } };
     }
 
     const result = await dbRedeemPoints(coupon.toUpperCase(), pointsToRedeem);
@@ -175,29 +187,33 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
       revalidatePath('/partners');
       revalidatePath('/reports');
       revalidatePath('/');
-      return { message: result.message, success: true, errors: {} };
+      return { title: "Sucesso!", message: result.message, success: true, errors: {} };
     } else {
       const fieldErrors: Record<string, string[]> = {};
       if (result.message.toLowerCase().includes("cupom")) fieldErrors.coupon = [result.message];
       else if (result.message.toLowerCase().includes("pontos")) fieldErrors.pointsToRedeem = [result.message];
       else fieldErrors._form = [result.message];
 
-      return { message: result.message, success: false, errors: fieldErrors };
+      return { title: "Erro no Resgate", message: result.message, success: false, errors: fieldErrors };
     }
   } catch (error: any) {
     console.error('Redeem Points Action Error:', error);
     const errorString = String(error.message || error).toLowerCase();
     let errorMessage;
+    let errorTitle = "Erro no Servidor";
 
     if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
-      errorMessage = 'Erro de permissão. Verifique as Regras de Segurança do seu banco de dados Firestore. Elas provavelmente estão bloqueando a escrita. Certifique-se que "allow write: if true;" está ativo.';
+      errorTitle = "Permissão Negada";
+      errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
     } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
-      errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel e faça um novo deploy.';
+      errorTitle = "Configuração Incompleta";
+      errorMessage = 'O app não se conectou ao Firebase. Adicione as variáveis de ambiente NEXT_PUBLIC_FIREBASE_* na Vercel e faça um novo "Redeploy".';
     } else {
-      errorMessage = `Ocorreu um erro no servidor: ${error.message || 'Erro desconhecido.'}. Verifique se a API do Firestore está ativada no seu projeto Google Cloud.`;
+      errorMessage = `Ocorreu um erro inesperado: ${error.message || 'Erro desconhecido.'}. Verifique o console para mais detalhes.`;
     }
 
     return {
+      title: errorTitle,
       message: errorMessage,
       success: false,
       errors: { _form: [errorMessage] }

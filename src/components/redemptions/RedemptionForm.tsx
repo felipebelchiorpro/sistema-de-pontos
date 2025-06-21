@@ -24,6 +24,7 @@ const RedemptionSchema = z.object({
 type RedemptionFormData = z.infer<typeof RedemptionSchema>;
 
 const initialActionState = {
+  title: "",
   message: "",
   errors: {},
   success: false,
@@ -84,7 +85,7 @@ export function RedemptionForm() {
   useEffect(() => {
     if (state.success) {
       toast({
-        title: "Sucesso!",
+        title: state.title || "Sucesso!",
         description: state.message,
       });
       form.reset();
@@ -106,7 +107,7 @@ export function RedemptionForm() {
         }
         if (errorFields._form?.[0]) {
            toast({
-                title: "Erro",
+                title: state.title || "Erro",
                 description: errorFields._form[0],
                 variant: "destructive",
             });
@@ -116,7 +117,7 @@ export function RedemptionForm() {
       
       if (!shownFieldErrorToast && state.message) {
          toast({
-            title: "Erro ao resgatar pontos",
+            title: state.title || "Erro ao resgatar pontos",
             description: state.message,
             variant: "destructive",
         });

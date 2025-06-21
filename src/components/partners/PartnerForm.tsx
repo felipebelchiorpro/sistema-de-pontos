@@ -23,6 +23,7 @@ const PartnerSchema = z.object({
 type PartnerFormData = z.infer<typeof PartnerSchema>;
 
 const initialState = {
+  title: "",
   message: "",
   errors: {},
   success: false,
@@ -53,7 +54,7 @@ export function PartnerForm() {
   useEffect(() => {
     if (state.success) {
       toast({
-        title: "Sucesso!",
+        title: state.title || "Sucesso!",
         description: state.message,
       });
       form.reset(); 
@@ -72,7 +73,7 @@ export function PartnerForm() {
         }
         if (errorFields._form?.[0]) {
            toast({
-                title: "Erro",
+                title: state.title || "Erro",
                 description: errorFields._form[0],
                 variant: "destructive",
             });
@@ -82,7 +83,7 @@ export function PartnerForm() {
       
       if (!shownFieldErrorToast && state.message) {
          toast({
-            title: "Erro ao cadastrar parceiro",
+            title: state.title || "Erro ao cadastrar parceiro",
             description: state.message,
             variant: "destructive",
         });

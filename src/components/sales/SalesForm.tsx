@@ -25,6 +25,7 @@ const SaleSchema = z.object({
 type SaleFormData = z.infer<typeof SaleSchema>;
 
 const initialState = {
+  title: "",
   message: "",
   errors: {},
   success: false,
@@ -74,7 +75,7 @@ export function SalesForm() {
   useEffect(() => {
     if (state.success) {
       toast({
-        title: "Sucesso!",
+        title: state.title || "Sucesso!",
         description: `${state.message} Pontos Gerados: ${state.pointsGenerated?.toFixed(2)}. Valor com Desconto: R$ ${state.discountedValue?.toFixed(2)}.`,
       });
       form.reset();
@@ -99,7 +100,7 @@ export function SalesForm() {
             }
             if (errorFields._form?.[0]) {
                 toast({
-                    title: "Erro",
+                    title: state.title || "Erro",
                     description: errorFields._form[0],
                     variant: "destructive",
                 });
@@ -109,7 +110,7 @@ export function SalesForm() {
         
         if (!shownFieldErrorToast && state.message) {
             toast({
-                title: "Erro ao registrar venda",
+                title: state.title || "Erro ao registrar venda",
                 description: state.message,
                 variant: "destructive",
             });
