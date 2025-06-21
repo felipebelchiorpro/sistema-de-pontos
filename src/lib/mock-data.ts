@@ -20,9 +20,19 @@ import type { Partner, Transaction } from '@/types';
 import { TransactionType } from '@/types';
 import { parseISO } from 'date-fns';
 
+const FIREBASE_INIT_ERROR_MSG = "A conexão com o Firebase não foi inicializada.";
 
-const partnersCollection = collection(db, 'partners');
-const transactionsCollection = collection(db, 'transactions');
+// Helper function to ensure Firestore is initialized before use.
+const ensureDb = () => {
+  if (!db) {
+    throw new Error(
+      FIREBASE_INIT_ERROR_MSG +
+      " Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente " +
+      "no seu arquivo .env.local ou nas configurações de ambiente da sua plataforma de hospedagem (Vercel)."
+    );
+  }
+  return db;
+};
 
 // Helper to convert Firestore doc to Partner object
 const docToPartner = (docSnap: any): Partner => {
@@ -55,27 +65,53 @@ const docToTransaction = (docSnap: any): Transaction => {
 };
 
 export async function getPartners(): Promise<Partner[]> {
-  const q = query(partnersCollection, orderBy('name', 'asc'));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(docToPartner);
+  try {
+    const partnersCollection = collection(ensureDb(), 'partners');
+    const q = query(partnersCollection, orderBy('name', 'asc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(docToPartner);
+  } catch (error: any) {
+    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+      console.warn(error.message);
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function getPartnerByCoupon(coupon: string): Promise<Partner | undefined> {
-  const q = query(partnersCollection, where('coupon', '==', coupon.toUpperCase()));
-  const querySnapshot = await getDocs(q);
-  if (querySnapshot.empty) {
-    return undefined;
+   try {
+    const partnersCollection = collection(ensureDb(), 'partners');
+    const q = query(partnersCollection, where('coupon', '==', coupon.toUpperCase()));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      return undefined;
+    }
+    return docToPartner(querySnapshot.docs[0]);
+  } catch (error: any) {
+    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+      console.warn(error.message);
+      return undefined;
+    }
+    throw error;
   }
-  return docToPartner(querySnapshot.docs[0]);
 }
 
 export async function getPartnerById(id: string): Promise<Partner | undefined> {
-  const docRef = doc(db, 'partners', id);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return undefined;
+  try {
+    const docRef = doc(ensureDb(), 'partners', id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      return undefined;
+    }
+    return docToPartner(docSnap);
+  } catch (error: any) {
+    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+      console.warn(error.message);
+      return undefined;
+    }
+    throw error;
   }
-  return docToPartner(docSnap);
 }
 
 export async function addPartner(name: string, coupon: string): Promise<{ success: boolean; message: string; partner?: Partner }> {
@@ -93,6 +129,7 @@ export async function addPartner(name: string, coupon: string): Promise<{ succes
     points: 0,
   };
 
+  const partnersCollection = collection(ensureDb(), 'partners');
   const docRef = await addDoc(partnersCollection, newPartnerData);
   const newPartner = await getPartnerById(docRef.id);
   
@@ -116,10 +153,11 @@ export async function registerSale(
   const pointsGenerated = parseFloat((totalSaleValue * 0.075).toFixed(2));
   const discountedValue = parseFloat((totalSaleValue - discount).toFixed(2));
 
-  const partnerRef = doc(db, 'partners', partner.id);
+  const partnerRef = doc(ensureDb(), 'partners', partner.id);
+  const localDb = ensureDb();
 
   try {
-    await runTransaction(db, async (transaction) => {
+    await runTransaction(localDb, async (transaction) => {
       const partnerDoc = await transaction.get(partnerRef);
       if (!partnerDoc.exists()) {
         throw new Error("Parceiro não encontrado.");
@@ -129,6 +167,7 @@ export async function registerSale(
       const newPoints = parseFloat((currentPoints + pointsGenerated).toFixed(2));
       transaction.update(partnerRef, { points: newPoints });
 
+      const transactionsCollection = collection(localDb, 'transactions');
       const newTransactionData = {
         partnerId: partner.id,
         type: TransactionType.SALE,
@@ -140,7 +179,6 @@ export async function registerSale(
         partnerName: partner.name,
         partnerCoupon: partner.coupon,
       };
-      // Firestore will auto-generate an ID for the new document
       transaction.set(doc(transactionsCollection), newTransactionData);
     });
     return { success: true, message: 'Venda registrada com sucesso.', pointsGenerated, discountedValue };
@@ -161,10 +199,11 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
   
   pointsToRedeem = parseFloat(pointsToRedeem.toFixed(2));
 
-  const partnerRef = doc(db, 'partners', partner.id);
+  const partnerRef = doc(ensureDb(), 'partners', partner.id);
+  const localDb = ensureDb();
 
   try {
-    await runTransaction(db, async (transaction) => {
+    await runTransaction(localDb, async (transaction) => {
       const partnerDoc = await transaction.get(partnerRef);
       if (!partnerDoc.exists()) {
         throw new Error("Parceiro não encontrado.");
@@ -178,6 +217,7 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
       const newPoints = parseFloat((currentPoints - pointsToRedeem).toFixed(2));
       transaction.update(partnerRef, { points: newPoints });
 
+      const transactionsCollection = collection(localDb, 'transactions');
       const newTransactionData = {
         partnerId: partner.id,
         type: TransactionType.REDEMPTION,
@@ -199,19 +239,37 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
 }
 
 export async function getTransactionsForPartner(partnerId: string): Promise<Transaction[]> {
-  const q = query(
-    transactionsCollection, 
-    where('partnerId', '==', partnerId),
-    orderBy('date', 'desc')
-  );
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(docToTransaction);
+   try {
+    const transactionsCollection = collection(ensureDb(), 'transactions');
+    const q = query(
+      transactionsCollection, 
+      where('partnerId', '==', partnerId),
+      orderBy('date', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(docToTransaction);
+  } catch (error: any) {
+    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+      console.warn(error.message);
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
-  const q = query(transactionsCollection, orderBy('date', 'desc'));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(docToTransaction);
+   try {
+    const transactionsCollection = collection(ensureDb(), 'transactions');
+    const q = query(transactionsCollection, orderBy('date', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(docToTransaction);
+  } catch (error: any) {
+    if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+      console.warn(error.message);
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function getTransactionsForPartnerByDateRange(
@@ -219,21 +277,30 @@ export async function getTransactionsForPartnerByDateRange(
   startDateString?: string,
   endDateString?: string
 ): Promise<Transaction[]> {
-    let constraints = [where('partnerId', '==', partnerId)];
+    try {
+      const transactionsCollection = collection(ensureDb(), 'transactions');
+      let constraints = [where('partnerId', '==', partnerId)];
 
-    if (startDateString) {
-      constraints.push(where('date', '>=', Timestamp.fromDate(parseISO(startDateString))));
-    }
-    if (endDateString) {
-      constraints.push(where('date', '<=', Timestamp.fromDate(parseISO(endDateString))));
-    }
+      if (startDateString) {
+        constraints.push(where('date', '>=', Timestamp.fromDate(parseISO(startDateString))));
+      }
+      if (endDateString) {
+        constraints.push(where('date', '<=', Timestamp.fromDate(parseISO(endDateString))));
+      }
 
-    const q = query(
-      transactionsCollection, 
-      ...constraints,
-      orderBy('date', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(docToTransaction);
+      const q = query(
+        transactionsCollection, 
+        ...constraints,
+        orderBy('date', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(docToTransaction);
+    } catch (error: any) {
+      if (error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
+        console.warn(error.message);
+        return [];
+      }
+      throw error;
+    }
 }
