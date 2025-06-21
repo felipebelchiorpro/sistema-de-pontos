@@ -6,18 +6,13 @@ import { ConfigError } from "@/components/config-error/ConfigError";
 import type { Partner } from "@/types";
 
 export default async function PartnersPage() {
-  let partners: Partner[] | undefined;
-  let configError: string | null = null;
-
-  try {
-    partners = await getPartners();
-  } catch (e: any) {
-     if (e.message?.includes('Configuração do Firebase incompleta')) {
-      configError = e.message;
-    } else {
-      throw e;
-    }
+  const result = await getPartners();
+  
+  if (result.error) {
+    return <ConfigError message={result.error} />;
   }
+
+  const partners = result.partners || [];
 
   return (
     <div className="space-y-8">
@@ -26,18 +21,14 @@ export default async function PartnersPage() {
         <p className="text-muted-foreground">Adicione novos parceiros e visualize os parceiros existentes.</p>
       </div>
       
-      {configError ? (
-        <ConfigError message={configError} />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-1">
-            <PartnerForm />
-          </div>
-          <div className="lg:col-span-2">
-            <PartnersTable partners={partners!} />
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-1">
+          <PartnerForm />
         </div>
-      )}
+        <div className="lg:col-span-2">
+          <PartnersTable partners={partners} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,8 @@
-
 // src/lib/mock-data.ts
 // THIS FILE IS NOW BACKED BY FIREBASE/FIRESTORE.
 // It is no longer "mock" data, but we keep the filename for simplicity.
 
-import { ensureDb } from './firebase';
+import { getDb } from './firebase';
 import { 
   collection, 
   query, 
@@ -50,35 +49,48 @@ const docToTransaction = (docSnap: any): Transaction => {
   };
 };
 
-export async function getPartners(): Promise<Partner[]> {
-  const partnersCollection = collection(ensureDb(), 'partners_v2');
+export async function getPartners(): Promise<{ partners?: Partner[]; error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { error };
+
+  const partnersCollection = collection(db, 'partners_v2');
   const q = query(partnersCollection, orderBy('name', 'asc'));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(docToPartner);
+  return { partners: querySnapshot.docs.map(docToPartner) };
 }
 
-export async function getPartnerByCoupon(coupon: string): Promise<Partner | undefined> {
-  const partnersCollection = collection(ensureDb(), 'partners_v2');
+export async function getPartnerByCoupon(coupon: string): Promise<{ partner?: Partner; error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { error };
+
+  const partnersCollection = collection(db, 'partners_v2');
   const q = query(partnersCollection, where('coupon', '==', coupon.toUpperCase()));
   const querySnapshot = await getDocs(q);
   if (querySnapshot.empty) {
-    return undefined;
+    return { partner: undefined };
   }
-  return docToPartner(querySnapshot.docs[0]);
+  return { partner: docToPartner(querySnapshot.docs[0]) };
 }
 
-export async function getPartnerById(id: string): Promise<Partner | undefined> {
-  const docRef = doc(ensureDb(), 'partners_v2', id);
+export async function getPartnerById(id: string): Promise<{ partner?: Partner; error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { error };
+  
+  const docRef = doc(db, 'partners_v2', id);
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) {
-    return undefined;
+    return { partner: undefined };
   }
-  return docToPartner(docSnap);
+  return { partner: docToPartner(docSnap) };
 }
 
-export async function addPartner(name: string, coupon: string): Promise<{ success: boolean; message: string; partner?: Partner }> {
-  const existingPartner = await getPartnerByCoupon(coupon);
-  if (existingPartner) {
+export async function addPartner(name: string, coupon: string): Promise<{ success: boolean; message: string; partner?: Partner, error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { success: false, message: "Erro de configuração do DB", error };
+
+  const existingPartnerResult = await getPartnerByCoupon(coupon);
+  if (existingPartnerResult.error) return { success: false, message: existingPartnerResult.error, error: existingPartnerResult.error };
+  if (existingPartnerResult.partner) {
     return { success: false, message: 'Cupom já existe.' };
   }
   if (!name.trim() || !coupon.trim()) {
@@ -91,35 +103,40 @@ export async function addPartner(name: string, coupon: string): Promise<{ succes
     points: 0,
   };
 
-  const partnersCollection = collection(ensureDb(), 'partners_v2');
+  const partnersCollection = collection(db, 'partners_v2');
   const docRef = await addDoc(partnersCollection, newPartnerData);
-  const newPartner = await getPartnerById(docRef.id);
+  const newPartnerResult = await getPartnerById(docRef.id);
+  if (newPartnerResult.error) return { success: false, message: newPartnerResult.error, error: newPartnerResult.error };
   
-  return { success: true, message: 'Parceiro cadastrado com sucesso.', partner: newPartner! };
+  return { success: true, message: 'Parceiro cadastrado com sucesso.', partner: newPartnerResult.partner! };
 }
 
 export async function registerSale(
   coupon: string, 
   totalSaleValue: number,
   externalSaleId?: string
-): Promise<{ success: boolean; message: string; pointsGenerated?: number; discountedValue?: number }> {
-  const partner = await getPartnerByCoupon(coupon);
-  if (!partner) {
+): Promise<{ success: boolean; message: string; pointsGenerated?: number; discountedValue?: number; error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { success: false, message: "Erro de configuração do DB", error };
+
+  const partnerResult = await getPartnerByCoupon(coupon);
+  if (partnerResult.error) return { success: false, message: partnerResult.error, error: partnerResult.error };
+  if (!partnerResult.partner) {
     return { success: false, message: 'Cupom inválido.' };
   }
   if (isNaN(totalSaleValue) || totalSaleValue <= 0) {
     return { success: false, message: 'Valor da venda deve ser um número positivo.' };
   }
 
+  const partner = partnerResult.partner;
   const discount = totalSaleValue * 0.075;
   const pointsGenerated = parseFloat((totalSaleValue * 0.075).toFixed(2));
   const discountedValue = parseFloat((totalSaleValue - discount).toFixed(2));
 
-  const partnerRef = doc(ensureDb(), 'partners_v2', partner.id);
-  const localDb = ensureDb();
-
+  const partnerRef = doc(db, 'partners_v2', partner.id);
+  
   try {
-    await runTransaction(localDb, async (transaction) => {
+    await runTransaction(db, async (transaction) => {
       const partnerDoc = await transaction.get(partnerRef);
       if (!partnerDoc.exists()) {
         throw new Error("Parceiro não encontrado.");
@@ -129,7 +146,7 @@ export async function registerSale(
       const newPoints = parseFloat((currentPoints + pointsGenerated).toFixed(2));
       transaction.update(partnerRef, { points: newPoints });
 
-      const transactionsCollection = collection(localDb, 'transactions_v2');
+      const transactionsCollection = collection(db, 'transactions_v2');
       const newTransactionData = {
         partnerId: partner.id,
         type: TransactionType.SALE,
@@ -144,28 +161,32 @@ export async function registerSale(
       transaction.set(doc(transactionsCollection), newTransactionData);
     });
     return { success: true, message: 'Venda registrada com sucesso.', pointsGenerated, discountedValue };
-  } catch (e) {
+  } catch (e: any) {
     console.error("Transaction failed: ", e);
-    return { success: false, message: 'Ocorreu um erro ao registrar a venda.' };
+    const errorMsg = e.message || 'Ocorreu um erro ao registrar a venda.';
+    return { success: false, message: errorMsg, error: errorMsg };
   }
 }
 
-export async function redeemPoints(coupon: string, pointsToRedeem: number): Promise<{ success: boolean; message: string }> {
-  const partner = await getPartnerByCoupon(coupon);
-  if (!partner) {
+export async function redeemPoints(coupon: string, pointsToRedeem: number): Promise<{ success: boolean; message: string; error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { success: false, message: "Erro de configuração do DB", error };
+
+  const partnerResult = await getPartnerByCoupon(coupon);
+  if (partnerResult.error) return { success: false, message: partnerResult.error, error: partnerResult.error };
+  if (!partnerResult.partner) {
     return { success: false, message: 'Cupom inválido.' };
   }
   if (isNaN(pointsToRedeem) || pointsToRedeem <= 0) {
     return { success: false, message: 'Pontos a resgatar devem ser um número positivo.' };
   }
   
+  const partner = partnerResult.partner;
   pointsToRedeem = parseFloat(pointsToRedeem.toFixed(2));
-
-  const partnerRef = doc(ensureDb(), 'partners_v2', partner.id);
-  const localDb = ensureDb();
+  const partnerRef = doc(db, 'partners_v2', partner.id);
 
   try {
-    await runTransaction(localDb, async (transaction) => {
+    await runTransaction(db, async (transaction) => {
       const partnerDoc = await transaction.get(partnerRef);
       if (!partnerDoc.exists()) {
         throw new Error("Parceiro não encontrado.");
@@ -179,7 +200,7 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
       const newPoints = parseFloat((currentPoints - pointsToRedeem).toFixed(2));
       transaction.update(partnerRef, { points: newPoints });
 
-      const transactionsCollection = collection(localDb, 'transactions_v2');
+      const transactionsCollection = collection(db, 'transactions_v2');
       const newTransactionData = {
         partnerId: partner.id,
         type: TransactionType.REDEMPTION,
@@ -193,37 +214,30 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
      return { success: true, message: 'Pontos resgatados com sucesso.' };
   } catch (e: any) {
     console.error("Transaction failed: ", e.message);
-    if (e.message.includes("Pontos insuficientes")) {
-         return { success: false, message: 'Pontos insuficientes.' };
-    }
-    return { success: false, message: 'Ocorreu um erro ao resgatar os pontos.' };
+    const errorMsg = e.message.includes("Pontos insuficientes") ? e.message : 'Ocorreu um erro ao resgatar os pontos.';
+    return { success: false, message: errorMsg, error: errorMsg };
   }
 }
 
-export async function getTransactionsForPartner(partnerId: string): Promise<Transaction[]> {
-  const transactionsCollection = collection(ensureDb(), 'transactions_v2');
-  const q = query(
-    transactionsCollection, 
-    where('partnerId', '==', partnerId),
-    orderBy('date', 'desc')
-  );
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(docToTransaction);
-}
+export async function getAllTransactionsWithPartnerDetails(): Promise<{ transactions?: Transaction[]; error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { error };
 
-export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
-  const transactionsCollection = collection(ensureDb(), 'transactions_v2');
+  const transactionsCollection = collection(db, 'transactions_v2');
   const q = query(transactionsCollection, orderBy('date', 'desc'));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(docToTransaction);
+  return { transactions: querySnapshot.docs.map(docToTransaction) };
 }
 
 export async function getTransactionsForPartnerByDateRange(
   partnerId: string,
   startDateString?: string,
   endDateString?: string
-): Promise<Transaction[]> {
-  const transactionsCollection = collection(ensureDb(), 'transactions_v2');
+): Promise<{ transactions?: Transaction[], error?: string }> {
+  const { db, error } = getDb();
+  if (error) return { error };
+
+  const transactionsCollection = collection(db, 'transactions_v2');
   let constraints = [where('partnerId', '==', partnerId)];
 
   if (startDateString) {
@@ -240,5 +254,5 @@ export async function getTransactionsForPartnerByDateRange(
   );
   
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(docToTransaction);
+  return { transactions: querySnapshot.docs.map(docToTransaction) };
 }

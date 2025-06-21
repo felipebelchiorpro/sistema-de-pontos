@@ -12,25 +12,20 @@ import { TransactionType } from "@/types";
 import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function ReportsPage() {
-  let partners: Partner[], allTransactions: Transaction[];
-  let configError: string | null = null;
+  const [partnersResult, allTransactionsResult] = await Promise.all([
+    getPartners(),
+    getAllTransactionsWithPartnerDetails()
+  ]);
 
-  try {
-    [partners, allTransactions] = await Promise.all([
-      getPartners(),
-      getAllTransactionsWithPartnerDetails()
-    ]);
-  } catch(e: any) {
-    if (e.message?.includes('Configuração do Firebase incompleta')) {
-      configError = e.message;
-    } else {
-      throw e;
-    }
+  if (partnersResult.error) {
+    return <ConfigError message={partnersResult.error} />;
+  }
+  if (allTransactionsResult.error) {
+    return <ConfigError message={allTransactionsResult.error} />;
   }
 
-  if (configError) {
-    return <ConfigError message={configError} />;
-  }
+  const partners = partnersResult.partners || [];
+  const allTransactions = allTransactionsResult.transactions || [];
   
   const sortedPartners = [...partners].sort((a, b) => b.points - a.points);
 

@@ -7,27 +7,20 @@ import { TransactionType } from "@/types";
 import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function DashboardPage() {
-  let partners, transactions;
-  let configError: string | null = null;
+  const [partnersResult, transactionsResult] = await Promise.all([
+    getPartners(),
+    getAllTransactionsWithPartnerDetails()
+  ]);
 
-  try {
-    const [partnersData, transactionsData] = await Promise.all([
-      getPartners(),
-      getAllTransactionsWithPartnerDetails()
-    ]);
-    partners = partnersData;
-    transactions = transactionsData;
-  } catch (e: any) {
-    if (e.message?.includes('Configuração do Firebase incompleta')) {
-      configError = e.message;
-    } else {
-      throw e;
-    }
+  if (partnersResult.error) {
+    return <ConfigError message={partnersResult.error} />;
+  }
+  if (transactionsResult.error) {
+    return <ConfigError message={transactionsResult.error} />;
   }
 
-  if (configError) {
-    return <ConfigError message={configError} />;
-  }
+  const partners = partnersResult.partners || [];
+  const transactions = transactionsResult.transactions || [];
 
   const totalPartners = partners.length;
   const totalSalesValue = transactions

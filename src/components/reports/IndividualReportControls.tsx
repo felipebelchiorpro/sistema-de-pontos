@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -59,16 +60,18 @@ export function IndividualReportControls({ partners }: IndividualReportControlsP
     );
     setIsLoading(false);
 
-    if ("error" in result) {
+    if (result.error) {
       toast({ title: "Erro ao buscar dados", description: result.error, variant: "destructive" });
       return;
     }
     
     if (result && result.partner && result.transactions) {
+        if (result.transactions.length === 0) {
+           toast({ title: "Atenção", description: "Nenhuma transação encontrada para este parceiro no período selecionado.", variant: "default" });
+           return;
+        }
         generateIndividualPdf(result.partner, result.transactions, startDate, endDate);
         toast({ title: "Sucesso", description: "Relatório PDF gerado." });
-    } else {
-        toast({ title: "Atenção", description: "Nenhuma transação encontrada para este parceiro no período selecionado.", variant: "default" });
     }
   };
 

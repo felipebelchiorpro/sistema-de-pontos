@@ -33,9 +33,19 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     };
   }
 
+  const { name, coupon } = validatedFields.data;
+  
   try {
-    const { name, coupon } = validatedFields.data;
     const result = await dbAddPartner(name, coupon.toUpperCase());
+
+    if (result.error) {
+       return {
+        title: "Erro de Configuração",
+        message: result.error,
+        success: false,
+        errors: { _form: [result.error] }
+      };
+    }
 
     if (result.success) {
       revalidatePath('/partners');
@@ -52,22 +62,10 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
       return { title: "Erro ao Adicionar", message: result.message, success: false, errors };
     }
   } catch (error: any) {
-    console.error('Add Partner Action Error:', error);
-    const errorString = String(error.message || error);
-    let errorMessage = `Ocorreu um erro inesperado: ${errorString}. Verifique o console para mais detalhes.`;
-    let errorTitle = "Erro no Servidor";
-
-    if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
-      errorTitle = "Permissão Negada";
-      errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
-    } else if (errorString.includes("Configuração do Firebase incompleta")) {
-      errorTitle = "Configuração Incompleta";
-      // The error message now contains the list of missing variables, so we can pass it directly.
-      errorMessage = errorString; 
-    }
-    
+    console.error('Add Partner Action - Unexpected Error:', error);
+    const errorMessage = `Ocorreu um erro inesperado: ${error.message || error}.`;
     return {
-      title: errorTitle,
+      title: "Erro Inesperado",
       message: errorMessage,
       success: false,
       errors: { _form: [errorMessage] }
@@ -97,9 +95,19 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     };
   }
 
+  const { coupon, totalSaleValue, externalSaleId } = validatedFields.data;
+  
   try {
-    const { coupon, totalSaleValue, externalSaleId } = validatedFields.data;
     const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined);
+    
+    if (result.error) {
+       return {
+        title: "Erro",
+        message: result.error,
+        success: false,
+        errors: { _form: [result.error] }
+      };
+    }
 
     if (result.success) {
       revalidatePath('/sales');
@@ -125,21 +133,10 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       return { title: "Erro na Venda", message: result.message, success: false, errors: fieldErrors };
     }
   } catch (error: any) {
-    console.error('Register Sale Action Error:', error);
-    const errorString = String(error.message || error);
-    let errorMessage = `Ocorreu um erro inesperado: ${errorString}. Verifique o console para mais detalhes.`;
-    let errorTitle = "Erro no Servidor";
-
-    if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
-      errorTitle = "Permissão Negada";
-      errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
-    } else if (errorString.includes("Configuração do Firebase incompleta")) {
-      errorTitle = "Configuração Incompleta";
-      errorMessage = errorString;
-    }
-    
+    console.error('Register Sale Action - Unexpected Error:', error);
+    const errorMessage = `Ocorreu um erro inesperado: ${error.message || error}.`;
     return {
-      title: errorTitle,
+      title: "Erro Inesperado",
       message: errorMessage,
       success: false,
       errors: { _form: [errorMessage] }
@@ -169,16 +166,25 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
   
   try {
     const { coupon, pointsToRedeem } = validatedFields.data;
-    const partner = await getPartnerByCoupon(coupon.toUpperCase());
-
-    if (!partner) {
-      return { title: "Erro de Resgate", message: 'Cupom inválido.', success: false, errors: { coupon: ['Cupom inválido.'] } };
-    }
-    if (partner.points < pointsToRedeem) {
-      return { title: "Erro de Resgate", message: 'Pontos insuficientes para resgate.', success: false, errors: { pointsToRedeem: ['Pontos insuficientes para resgate.'] } };
-    }
-
+    // The redeemPoints function in mock-data now handles all logic, including checks
     const result = await dbRedeemPoints(coupon.toUpperCase(), pointsToRedeem);
+    
+    if (result.error) {
+       const fieldErrors: Record<string, string[]> = {};
+       const lowerCaseError = result.error.toLowerCase();
+       
+       if (lowerCaseError.includes("configuração")) {
+          fieldErrors._form = [result.error];
+       } else if (lowerCaseError.includes("cupom")) {
+         fieldErrors.coupon = [result.error];
+       } else if (lowerCaseError.includes("pontos insuficientes")) {
+         fieldErrors.pointsToRedeem = [result.error];
+       } else {
+         fieldErrors._form = [result.error];
+       }
+       return { title: "Erro no Resgate", message: result.error, success: false, errors: fieldErrors };
+    }
+
 
     if (result.success) {
       revalidatePath('/redemptions');
@@ -187,6 +193,7 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
       revalidatePath('/');
       return { title: "Sucesso!", message: result.message, success: true, errors: {} };
     } else {
+      // This case should be mostly covered by the result.error check now, but is kept as a fallback.
       const fieldErrors: Record<string, string[]> = {};
       if (result.message.toLowerCase().includes("cupom")) fieldErrors.coupon = [result.message];
       else if (result.message.toLowerCase().includes("pontos")) fieldErrors.pointsToRedeem = [result.message];
@@ -195,21 +202,10 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
       return { title: "Erro no Resgate", message: result.message, success: false, errors: fieldErrors };
     }
   } catch (error: any) {
-    console.error('Redeem Points Action Error:', error);
-    const errorString = String(error.message || error);
-    let errorMessage = `Ocorreu um erro inesperado: ${errorString}. Verifique o console para mais detalhes.`;
-    let errorTitle = "Erro no Servidor";
-
-    if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
-      errorTitle = "Permissão Negada";
-      errorMessage = 'O Firebase bloqueou a escrita. Verifique suas Regras de Segurança no Firestore e certifique-se que "allow write: if true;" está ativo.';
-    } else if (errorString.includes("Configuração do Firebase incompleta")) {
-      errorTitle = "Configuração Incompleta";
-      errorMessage = errorString;
-    }
-
+    console.error('Redeem Points Action - Unexpected Error:', error);
+    const errorMessage = `Ocorreu um erro inesperado: ${error.message || error}.`;
     return {
-      title: errorTitle,
+      title: "Erro Inesperado",
       message: errorMessage,
       success: false,
       errors: { _form: [errorMessage] }
@@ -222,9 +218,12 @@ export async function fetchPartnerPointsAction(coupon: string): Promise<{ points
     return { points: null, error: "Cupom deve ter pelo menos 3 caracteres." };
   }
   try {
-    const partner = await getPartnerByCoupon(coupon.toUpperCase());
-    if (partner) {
-      return { points: partner.points, error: undefined };
+    const result = await getPartnerByCoupon(coupon.toUpperCase());
+    if (result.error) {
+      return { points: null, error: result.error };
+    }
+    if (result.partner) {
+      return { points: result.partner.points, error: undefined };
     }
     return { points: null, error: "Cupom não encontrado." };
   } catch (e: any) {
@@ -237,14 +236,18 @@ export async function fetchIndividualPartnerReportDataAction(
   partnerId: string,
   startDate?: string,
   endDate?: string
-): Promise<{ partner: Partner; transactions: Transaction[] } | { error: string }> {
+): Promise<{ partner?: Partner; transactions?: Transaction[]; error?: string }> {
   try {
-    const partner = await getPartnerById(partnerId);
-    if (!partner) {
+    const partnerResult = await getPartnerById(partnerId);
+    if (partnerResult.error) return { error: partnerResult.error };
+    if (!partnerResult.partner) {
       return { error: "Parceiro não encontrado." };
     }
-    const transactions = await getTransactionsForPartnerByDateRange(partnerId, startDate, endDate);
-    return { partner, transactions };
+    
+    const transactionsResult = await getTransactionsForPartnerByDateRange(partnerId, startDate, endDate);
+    if (transactionsResult.error) return { error: transactionsResult.error };
+
+    return { partner: partnerResult.partner, transactions: transactionsResult.transactions || [] };
   } catch (e: any) {
     console.error("Error fetching individual partner report data:", e);
     return { error: "Erro ao buscar dados do relatório individual." };
