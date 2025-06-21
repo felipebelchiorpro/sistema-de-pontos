@@ -89,7 +89,8 @@ export async function addPartner(name: string, coupon: string): Promise<{ succes
 export async function registerSale(
   coupon: string, 
   totalSaleValue: number,
-  externalSaleId?: string
+  externalSaleId?: string,
+  saleDate?: string
 ): Promise<{ success: boolean; message: string; pointsGenerated?: number; discountedValue?: number; error?: string }> {
   const { supabase, error } = getSupabase();
   if (error) return { success: false, message: error, error };
@@ -97,7 +98,8 @@ export async function registerSale(
   const { data, error: rpcError } = await supabase.rpc('register_sale', {
     p_coupon: coupon.toUpperCase(),
     p_total_sale_value: totalSaleValue,
-    p_external_sale_id: externalSaleId || null
+    p_external_sale_id: externalSaleId || null,
+    p_sale_date: saleDate || null
   });
 
   if (rpcError) {

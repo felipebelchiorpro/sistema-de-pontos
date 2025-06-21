@@ -21,13 +21,15 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { registerSaleAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, CheckCircle, ExternalLink } from "lucide-react";
+import { DollarSign, CheckCircle, ExternalLink, Calendar } from "lucide-react";
 import type { Partner } from "@/types";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const SaleSchema = z.object({
   coupon: z.string({ required_error: "Por favor, selecione um cupom." }).min(1, { message: "Cupom é obrigatório." }),
   totalSaleValue: z.coerce.number().positive({ message: "Valor da venda deve ser positivo." }),
   externalSaleId: z.string().optional(),
+  saleDate: z.date().optional(),
 });
 
 type SaleFormData = z.infer<typeof SaleSchema>;
@@ -64,6 +66,7 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
       coupon: "",
       totalSaleValue: 0,
       externalSaleId: "",
+      saleDate: undefined,
     },
   });
 
@@ -132,6 +135,9 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
     formData.append("totalSaleValue", data.totalSaleValue.toString());
     if (data.externalSaleId && data.externalSaleId.trim() !== "") {
       formData.append("externalSaleId", data.externalSaleId);
+    }
+    if (data.saleDate) {
+      formData.append("saleDate", data.saleDate.toISOString());
     }
     formAction(formData);
   };
@@ -213,6 +219,22 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
                                     />
                                 </div>
                              </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                
+                <FormField
+                    control={form.control}
+                    name="saleDate"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                            <FormLabel>Data da Venda (Opcional)</FormLabel>
+                            <DatePicker 
+                                date={field.value} 
+                                setDate={field.onChange} 
+                                placeholder="Hoje"
+                            />
                             <FormMessage />
                         </FormItem>
                     )}

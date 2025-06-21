@@ -54,6 +54,7 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
       revalidatePath('/sales');
       revalidatePath('/redemptions');
       revalidatePath('/reports');
+      revalidatePath('/transactions');
       return { title: "Sucesso!", message: result.message, success: true, partner: result.partner };
     } else {
       const errors: Record<string, string[]> = {};
@@ -80,6 +81,7 @@ const SaleSchema = z.object({
   coupon: z.string().min(1, { message: 'Cupom é obrigatório.' }),
   totalSaleValue: z.coerce.number().positive({ message: 'Valor da venda deve ser positivo.' }),
   externalSaleId: z.string().optional(),
+  saleDate: z.string().optional(),
 });
 
 export async function registerSaleAction(prevState: any, formData: FormData) {
@@ -87,6 +89,7 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     coupon: formData.get('coupon'),
     totalSaleValue: formData.get('totalSaleValue'),
     externalSaleId: formData.get('externalSaleId'),
+    saleDate: formData.get('saleDate'),
   });
 
   if (!validatedFields.success) {
@@ -98,10 +101,10 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     };
   }
 
-  const { coupon, totalSaleValue, externalSaleId } = validatedFields.data;
+  const { coupon, totalSaleValue, externalSaleId, saleDate } = validatedFields.data;
   
   try {
-    const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined);
+    const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined, saleDate);
     
     if (result.error) {
        return {
