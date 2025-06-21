@@ -66,11 +66,11 @@ const docToTransaction = (docSnap: any): Transaction => {
 
 export async function getPartners(): Promise<Partner[]> {
   try {
-    const partnersCollection = collection(ensureDb(), 'partners');
+    const partnersCollection = collection(ensureDb(), 'partners_v2');
     const q = query(partnersCollection, orderBy('name', 'asc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToPartner);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return [];
@@ -81,14 +81,14 @@ export async function getPartners(): Promise<Partner[]> {
 
 export async function getPartnerByCoupon(coupon: string): Promise<Partner | undefined> {
    try {
-    const partnersCollection = collection(ensureDb(), 'partners');
+    const partnersCollection = collection(ensureDb(), 'partners_v2');
     const q = query(partnersCollection, where('coupon', '==', coupon.toUpperCase()));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
       return undefined;
     }
     return docToPartner(querySnapshot.docs[0]);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return undefined;
@@ -99,13 +99,13 @@ export async function getPartnerByCoupon(coupon: string): Promise<Partner | unde
 
 export async function getPartnerById(id: string): Promise<Partner | undefined> {
   try {
-    const docRef = doc(ensureDb(), 'partners', id);
+    const docRef = doc(ensureDb(), 'partners_v2', id);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
       return undefined;
     }
     return docToPartner(docSnap);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return undefined;
@@ -129,7 +129,7 @@ export async function addPartner(name: string, coupon: string): Promise<{ succes
     points: 0,
   };
 
-  const partnersCollection = collection(ensureDb(), 'partners');
+  const partnersCollection = collection(ensureDb(), 'partners_v2');
   const docRef = await addDoc(partnersCollection, newPartnerData);
   const newPartner = await getPartnerById(docRef.id);
   
@@ -153,7 +153,7 @@ export async function registerSale(
   const pointsGenerated = parseFloat((totalSaleValue * 0.075).toFixed(2));
   const discountedValue = parseFloat((totalSaleValue - discount).toFixed(2));
 
-  const partnerRef = doc(ensureDb(), 'partners', partner.id);
+  const partnerRef = doc(ensureDb(), 'partners_v2', partner.id);
   const localDb = ensureDb();
 
   try {
@@ -167,7 +167,7 @@ export async function registerSale(
       const newPoints = parseFloat((currentPoints + pointsGenerated).toFixed(2));
       transaction.update(partnerRef, { points: newPoints });
 
-      const transactionsCollection = collection(localDb, 'transactions');
+      const transactionsCollection = collection(localDb, 'transactions_v2');
       const newTransactionData = {
         partnerId: partner.id,
         type: TransactionType.SALE,
@@ -199,7 +199,7 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
   
   pointsToRedeem = parseFloat(pointsToRedeem.toFixed(2));
 
-  const partnerRef = doc(ensureDb(), 'partners', partner.id);
+  const partnerRef = doc(ensureDb(), 'partners_v2', partner.id);
   const localDb = ensureDb();
 
   try {
@@ -217,7 +217,7 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
       const newPoints = parseFloat((currentPoints - pointsToRedeem).toFixed(2));
       transaction.update(partnerRef, { points: newPoints });
 
-      const transactionsCollection = collection(localDb, 'transactions');
+      const transactionsCollection = collection(localDb, 'transactions_v2');
       const newTransactionData = {
         partnerId: partner.id,
         type: TransactionType.REDEMPTION,
@@ -240,7 +240,7 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
 
 export async function getTransactionsForPartner(partnerId: string): Promise<Transaction[]> {
    try {
-    const transactionsCollection = collection(ensureDb(), 'transactions');
+    const transactionsCollection = collection(ensureDb(), 'transactions_v2');
     const q = query(
       transactionsCollection, 
       where('partnerId', '==', partnerId),
@@ -248,7 +248,7 @@ export async function getTransactionsForPartner(partnerId: string): Promise<Tran
     );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToTransaction);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return [];
@@ -259,11 +259,11 @@ export async function getTransactionsForPartner(partnerId: string): Promise<Tran
 
 export async function getAllTransactionsWithPartnerDetails(): Promise<Transaction[]> {
    try {
-    const transactionsCollection = collection(ensureDb(), 'transactions');
+    const transactionsCollection = collection(ensureDb(), 'transactions_v2');
     const q = query(transactionsCollection, orderBy('date', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(docToTransaction);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
       console.warn(error.message);
       return [];
@@ -278,7 +278,7 @@ export async function getTransactionsForPartnerByDateRange(
   endDateString?: string
 ): Promise<Transaction[]> {
     try {
-      const transactionsCollection = collection(ensureDb(), 'transactions');
+      const transactionsCollection = collection(ensureDb(), 'transactions_v2');
       let constraints = [where('partnerId', '==', partnerId)];
 
       if (startDateString) {
@@ -296,7 +296,7 @@ export async function getTransactionsForPartnerByDateRange(
       
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(docToTransaction);
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error && error.message.startsWith(FIREBASE_INIT_ERROR_MSG)) {
         console.warn(error.message);
         return [];
