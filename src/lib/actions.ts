@@ -3,6 +3,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { getDb } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import {
   addPartner as dbAddPartner,
   registerSale as dbRegisterSale,
@@ -251,5 +253,33 @@ export async function fetchIndividualPartnerReportDataAction(
   } catch (e: any) {
     console.error("Error fetching individual partner report data:", e);
     return { error: "Erro ao buscar dados do relatório individual." };
+  }
+}
+
+export async function testFirebaseConnectionAction(): Promise<{ success: boolean; message: string; }> {
+  const { db, error } = getDb();
+
+  if (error) {
+    return { success: false, message: `A inicialização do Firebase falhou. Motivo: ${error}` };
+  }
+  
+  if (!db) {
+     return { success: false, message: 'A instância do banco de dados não está disponível, mas nenhum erro explícito foi retornado. Isso é um estado inesperado.' };
+  }
+
+  try {
+    const testDocRef = doc(db, 'internal_health_check', 'doc1');
+    await getDoc(testDocRef);
+    
+    return { success: true, message: 'Conexão com o Firebase estabelecida com sucesso! A aplicação consegue inicializar o SDK e se comunicar com o Firestore.' };
+
+  } catch (e: any) {
+    let errorMessage = `Erro ao comunicar com o Firestore: ${e.message}`;
+    if (e.code === 'permission-denied' || e.message.toLowerCase().includes('permission-denied')) {
+        errorMessage = "Sucesso ao inicializar o SDK, mas as Regras de Segurança do Firestore estão bloqueando o acesso. Verifique suas regras no Console do Firebase para permitir leituras (geralmente, `allow read, write: if true;` para desenvolvimento).";
+    } else if (e.message.toLowerCase().includes('failed to fetch')) {
+        errorMessage = "Falha de rede ao tentar se conectar ao Firestore. Verifique sua conexão com a internet e as configurações de firewall.";
+    }
+    return { success: false, message: errorMessage };
   }
 }

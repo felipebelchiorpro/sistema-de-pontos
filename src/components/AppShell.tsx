@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
   { href: '/redemptions', label: 'Resgatar Pontos', icon: Gift },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
   { href: '/transactions', label: 'Transações', icon: ListChecks },
+  { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -69,20 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-4 mt-auto">
-            {/* Example Footer Item - can be expanded */}
             <SidebarMenu>
-                <SidebarMenuItem>
-                     <SidebarMenuButton
-                      asChild
-                      tooltip={{ children: "Configurações", className:"bg-popover text-popover-foreground" }}
-                      className="justify-start"
-                    >
-                      <a>
-                        <Settings />
-                        <span className="group-data-[collapsible=icon]:hidden">Configurações</span>
-                      </a>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
                  <SidebarMenuItem>
                      <SidebarMenuButton
                       asChild
