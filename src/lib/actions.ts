@@ -31,21 +31,32 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     };
   }
 
-  const { name, coupon } = validatedFields.data;
-  const result = await dbAddPartner(name, coupon.toUpperCase());
+  try {
+    const { name, coupon } = validatedFields.data;
+    const result = await dbAddPartner(name, coupon.toUpperCase());
 
-  if (result.success) {
-    revalidatePath('/partners');
-    revalidatePath('/reports');
-    return { message: result.message, success: true, partner: result.partner };
-  } else {
-    const errors: Record<string, string[]> = {};
-    if (result.message.toLowerCase().includes('cupom')) {
-      errors.coupon = [result.message];
+    if (result.success) {
+      revalidatePath('/partners');
+      revalidatePath('/reports');
+      revalidatePath('/'); // Revalidate dashboard as well
+      return { message: result.message, success: true, partner: result.partner };
     } else {
-      errors._form = [result.message]; 
+      const errors: Record<string, string[]> = {};
+      if (result.message.toLowerCase().includes('cupom')) {
+        errors.coupon = [result.message];
+      } else {
+        errors._form = [result.message]; 
+      }
+      return { message: result.message, success: false, errors };
     }
-    return { message: result.message, success: false, errors };
+  } catch (error) {
+    console.error('Add Partner Action Error:', error);
+    const errorMessage = 'Ocorreu um erro no servidor. Verifique as configurações do Firebase (variáveis de ambiente e regras de segurança) e tente novamente.';
+    return {
+      message: errorMessage,
+      success: false,
+      errors: { _form: [errorMessage] }
+    };
   }
 }
 
@@ -70,30 +81,40 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     };
   }
 
-  const { coupon, totalSaleValue, externalSaleId } = validatedFields.data;
-  const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined);
+  try {
+    const { coupon, totalSaleValue, externalSaleId } = validatedFields.data;
+    const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined);
 
-  if (result.success) {
-    revalidatePath('/sales');
-    revalidatePath('/partners');
-    revalidatePath('/reports');
-    revalidatePath('/');
-    return {
-      message: result.message,
-      success: true,
-      pointsGenerated: result.pointsGenerated,
-      discountedValue: result.discountedValue
-    };
-  } else {
-    const fieldErrors: Record<string, string[]> = {};
-    if (result.message.toLowerCase().includes("cupom")) {
-      fieldErrors.coupon = [result.message];
-    } else if (result.message.toLowerCase().includes("valor da venda") || result.message.toLowerCase().includes("valor")) {
-      fieldErrors.totalSaleValue = [result.message];
+    if (result.success) {
+      revalidatePath('/sales');
+      revalidatePath('/partners');
+      revalidatePath('/reports');
+      revalidatePath('/');
+      return {
+        message: result.message,
+        success: true,
+        pointsGenerated: result.pointsGenerated,
+        discountedValue: result.discountedValue
+      };
     } else {
-      fieldErrors._form = [result.message]; 
+      const fieldErrors: Record<string, string[]> = {};
+      if (result.message.toLowerCase().includes("cupom")) {
+        fieldErrors.coupon = [result.message];
+      } else if (result.message.toLowerCase().includes("valor da venda") || result.message.toLowerCase().includes("valor")) {
+        fieldErrors.totalSaleValue = [result.message];
+      } else {
+        fieldErrors._form = [result.message]; 
+      }
+      return { message: result.message, success: false, errors: fieldErrors };
     }
-    return { message: result.message, success: false, errors: fieldErrors };
+  } catch (error) {
+    console.error('Register Sale Action Error:', error);
+    const errorMessage = 'Ocorreu um erro no servidor. Verifique as configurações do Firebase (variáveis de ambiente e regras de segurança) e tente novamente.';
+    return {
+      message: errorMessage,
+      success: false,
+      errors: { _form: [errorMessage] }
+    };
   }
 }
 
@@ -115,32 +136,42 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
       success: false,
     };
   }
+  
+  try {
+    const { coupon, pointsToRedeem } = validatedFields.data;
+    const partner = await getPartnerByCoupon(coupon.toUpperCase());
 
-  const { coupon, pointsToRedeem } = validatedFields.data;
-  const partner = await getPartnerByCoupon(coupon.toUpperCase());
+    if (!partner) {
+      return { message: 'Cupom inválido.', success: false, errors: { coupon: ['Cupom inválido.'] } };
+    }
+    if (partner.points < pointsToRedeem) {
+      return { message: 'Pontos insuficientes para resgate.', success: false, errors: { pointsToRedeem: ['Pontos insuficientes para resgate.'] } };
+    }
 
-  if (!partner) {
-    return { message: 'Cupom inválido.', success: false, errors: { coupon: ['Cupom inválido.'] } };
-  }
-  if (partner.points < pointsToRedeem) {
-     return { message: 'Pontos insuficientes para resgate.', success: false, errors: { pointsToRedeem: ['Pontos insuficientes para resgate.'] } };
-  }
+    const result = await dbRedeemPoints(coupon.toUpperCase(), pointsToRedeem);
 
-  const result = await dbRedeemPoints(coupon.toUpperCase(), pointsToRedeem);
+    if (result.success) {
+      revalidatePath('/redemptions');
+      revalidatePath('/partners');
+      revalidatePath('/reports');
+      revalidatePath('/');
+      return { message: result.message, success: true, errors: {} };
+    } else {
+      const fieldErrors: Record<string, string[]> = {};
+      if (result.message.toLowerCase().includes("cupom")) fieldErrors.coupon = [result.message];
+      else if (result.message.toLowerCase().includes("pontos")) fieldErrors.pointsToRedeem = [result.message];
+      else fieldErrors._form = [result.message];
 
-  if (result.success) {
-    revalidatePath('/redemptions');
-    revalidatePath('/partners');
-    revalidatePath('/reports');
-    revalidatePath('/');
-    return { message: result.message, success: true, errors: {} };
-  } else {
-    const fieldErrors: Record<string, string[]> = {};
-    if (result.message.toLowerCase().includes("cupom")) fieldErrors.coupon = [result.message];
-    else if (result.message.toLowerCase().includes("pontos")) fieldErrors.pointsToRedeem = [result.message];
-    else fieldErrors._form = [result.message];
-
-    return { message: result.message, success: false, errors: fieldErrors };
+      return { message: result.message, success: false, errors: fieldErrors };
+    }
+  } catch (error) {
+    console.error('Redeem Points Action Error:', error);
+    const errorMessage = 'Ocorreu um erro no servidor. Verifique as configurações do Firebase (variáveis de ambiente e regras de segurança) e tente novamente.';
+    return {
+      message: errorMessage,
+      success: false,
+      errors: { _form: [errorMessage] }
+    };
   }
 }
 
