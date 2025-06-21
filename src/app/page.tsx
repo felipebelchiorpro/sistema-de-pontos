@@ -4,20 +4,12 @@ import { BarChart3, Users, ShoppingCart, Gift } from "lucide-react";
 import Link from "next/link";
 import { getPartners, getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { TransactionType } from "@/types";
-import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function DashboardPage() {
   const [partnersResult, transactionsResult] = await Promise.all([
     getPartners(),
     getAllTransactionsWithPartnerDetails()
   ]);
-
-  if (partnersResult.error) {
-    return <ConfigError message={partnersResult.error} />;
-  }
-  if (transactionsResult.error) {
-    return <ConfigError message={transactionsResult.error} />;
-  }
 
   const partners = partnersResult.partners || [];
   const transactions = transactionsResult.transactions || [];

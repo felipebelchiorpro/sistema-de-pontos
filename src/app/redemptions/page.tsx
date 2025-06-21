@@ -1,14 +1,9 @@
+
 import { RedemptionForm } from "@/components/redemptions/RedemptionForm";
 import { getPartners } from "@/lib/mock-data";
-import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function RedemptionsPage() {
   const partnersResult = await getPartners();
-
-  if (partnersResult.error) {
-    return <ConfigError message={partnersResult.error} />;
-  }
-
   const partners = partnersResult.partners || [];
 
   return (

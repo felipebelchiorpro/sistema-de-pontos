@@ -1,17 +1,12 @@
+
 import { PartnerForm } from "@/components/partners/PartnerForm";
 import { PartnersTable } from "@/components/partners/PartnersTable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPartners } from "@/lib/mock-data";
-import { ConfigError } from "@/components/config-error/ConfigError";
 import type { Partner } from "@/types";
 
 export default async function PartnersPage() {
   const result = await getPartners();
-  
-  if (result.error) {
-    return <ConfigError message={result.error} />;
-  }
-
   const partners = result.partners || [];
 
   return (

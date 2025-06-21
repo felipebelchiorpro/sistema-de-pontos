@@ -4,16 +4,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
-import { ConfigError } from "@/components/config-error/ConfigError";
 import type { Transaction } from "@/types";
 
 export default async function TransactionsPage() {
   const result = await getAllTransactionsWithPartnerDetails();
-
-  if (result.error) {
-    return <ConfigError message={result.error} />;
-  }
-  
   const transactions = result.transactions || [];
 
   return (

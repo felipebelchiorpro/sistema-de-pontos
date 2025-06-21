@@ -9,20 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { UserCircle, Award, Coins, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react";
 import type { Partner, Transaction } from "@/types";
 import { TransactionType } from "@/types";
-import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function ReportsPage() {
   const [partnersResult, allTransactionsResult] = await Promise.all([
     getPartners(),
     getAllTransactionsWithPartnerDetails()
   ]);
-
-  if (partnersResult.error) {
-    return <ConfigError message={partnersResult.error} />;
-  }
-  if (allTransactionsResult.error) {
-    return <ConfigError message={allTransactionsResult.error} />;
-  }
 
   const partners = partnersResult.partners || [];
   const allTransactions = allTransactionsResult.transactions || [];
