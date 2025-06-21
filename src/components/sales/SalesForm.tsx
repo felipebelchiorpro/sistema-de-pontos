@@ -11,19 +11,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { registerSaleAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, CheckCircle, ExternalLink, Calendar } from "lucide-react";
 import type { Partner } from "@/types";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ResponsiveSelect } from "../ui/responsive-select";
 
 const SaleSchema = z.object({
   coupon: z.string({ required_error: "Por favor, selecione um cupom." }).min(1, { message: "Cupom é obrigatório." }),
@@ -157,24 +151,18 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Cupom do Parceiro</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger className="bg-input">
-                                    <SelectValue placeholder="Selecione um cupom" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                {partners.length > 0 ? (
-                                    partners.map((partner) => (
-                                    <SelectItem key={partner.id} value={partner.coupon}>
-                                        {partner.name} ({partner.coupon})
-                                    </SelectItem>
-                                    ))
-                                ) : (
-                                    <div className="p-2 text-sm text-muted-foreground text-center">Nenhum parceiro cadastrado.</div>
-                                )}
-                                </SelectContent>
-                            </Select>
+                            <FormControl>
+                                <ResponsiveSelect
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    placeholder="Selecione um cupom"
+                                    options={partners.map((partner) => ({
+                                        value: partner.coupon,
+                                        label: `${partner.name} (${partner.coupon})`,
+                                    }))}
+                                    className="bg-input"
+                                />
+                            </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}

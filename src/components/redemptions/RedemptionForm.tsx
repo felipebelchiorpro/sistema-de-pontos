@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Gift, CheckCircle } from "lucide-react";
 import type { Partner } from "@/types";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 
 const RedemptionSchema = z.object({
   coupon: z.string({ required_error: "Por favor, selecione um parceiro." }).min(1, { message: "Cupom é obrigatório." }),
@@ -131,24 +131,18 @@ export function RedemptionForm({ partners }: { partners: Partner[] }) {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Cupom do Parceiro</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger className="bg-input">
-                                    <SelectValue placeholder="Selecione um parceiro" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                {partners.length > 0 ? (
-                                    partners.map((partner) => (
-                                    <SelectItem key={partner.id} value={partner.coupon}>
-                                        {partner.name} ({partner.coupon})
-                                    </SelectItem>
-                                    ))
-                                ) : (
-                                    <div className="p-2 text-sm text-muted-foreground text-center">Nenhum parceiro cadastrado.</div>
-                                )}
-                                </SelectContent>
-                            </Select>
+                             <FormControl>
+                                <ResponsiveSelect
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    placeholder="Selecione um parceiro"
+                                    options={partners.map((partner) => ({
+                                        value: partner.coupon,
+                                        label: `${partner.name} (${partner.coupon})`,
+                                    }))}
+                                    className="bg-input"
+                                />
+                            </FormControl>
                             <FormMessage />
                              {currentPartnerPoints !== null && (
                                 <p className="text-sm text-muted-foreground pt-1">
