@@ -15,7 +15,7 @@ export function DiscountCalculator() {
   const { discount, finalValue } = useMemo(() => {
     const numericSaleValue = parseFloat(saleValue);
     if (isNaN(numericSaleValue) || numericSaleValue <= 0) {
-      return { discount: 0, finalValue: 0 };
+      return { discount: 0, finalValue: 0, points: 0 };
     }
     const calculatedDiscount = numericSaleValue * DISCOUNT_RATE;
     const calculatedFinalValue = numericSaleValue - calculatedDiscount;
@@ -26,11 +26,8 @@ export function DiscountCalculator() {
   }, [saleValue]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Allow only numbers and a single decimal point
-    const value = e.target.value;
-    if (/^\d*\.?\d*$/.test(value) || value === "") {
-      setSaleValue(value);
-    }
+    // Simplified handler for better cross-device compatibility
+    setSaleValue(e.target.value);
   };
 
   return (

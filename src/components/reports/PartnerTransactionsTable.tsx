@@ -27,8 +27,8 @@ export function PartnerTransactionsTable({ transactions }: PartnerTransactionsTa
           <TableRow>
             <TableHead>Data</TableHead>
             <TableHead>Tipo</TableHead>
-            <TableHead>ID Externo</TableHead>
-            <TableHead className="text-right">Valor Venda (Original)</TableHead>
+            <TableHead className="hidden md:table-cell">ID Externo</TableHead>
+            <TableHead className="text-right hidden md:table-cell">Valor Venda (Original)</TableHead>
             <TableHead className="text-right">Pontos</TableHead>
           </TableRow>
         </TableHeader>
@@ -43,12 +43,12 @@ export function PartnerTransactionsTable({ transactions }: PartnerTransactionsTa
                   {transaction.type}
                 </Badge>
               </TableCell>
-              <TableCell className="text-muted-foreground text-xs font-mono">
+              <TableCell className="text-muted-foreground text-xs font-mono hidden md:table-cell">
                 {transaction.type === TransactionType.SALE && transaction.externalSaleId
                   ? transaction.externalSaleId
                   : "N/A"}
               </TableCell>
-              <TableCell className="text-right text-muted-foreground">
+              <TableCell className="text-right text-muted-foreground hidden md:table-cell">
                 {transaction.type === TransactionType.SALE && transaction.originalSaleValue
                   ? `R$ ${transaction.originalSaleValue.toFixed(2)}`
                   : "N/A"}
