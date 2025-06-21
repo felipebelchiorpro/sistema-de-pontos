@@ -212,25 +212,6 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
   }
 }
 
-export async function fetchPartnerPointsAction(coupon: string): Promise<{ points: number | null; error?: string }> {
-  if (!coupon || coupon.trim().length < 3) { 
-    return { points: null, error: "Cupom deve ter pelo menos 3 caracteres." };
-  }
-  try {
-    const result = await getPartnerByCoupon(coupon.toUpperCase());
-    if (result.error) {
-      return { points: null, error: result.error };
-    }
-    if (result.partner) {
-      return { points: result.partner.points, error: undefined };
-    }
-    return { points: null, error: "Cupom não encontrado." };
-  } catch (e: any) {
-    console.error("Error fetching partner points:", e);
-    return { points: null, error: "Erro ao buscar pontos do parceiro." };
-  }
-}
-
 export async function fetchIndividualPartnerReportDataAction(
   partnerId: string,
   startDate?: string,
