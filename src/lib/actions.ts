@@ -51,12 +51,15 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
     }
   } catch (error: any) {
     console.error('Add Partner Action Error:', error);
-    let errorMessage = 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.';
-    
-    if (error.code === 'permission-denied') {
-        errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore no console do Firebase. Elas podem estar bloqueando a escrita.';
-    } else if (error.message && error.message.includes("A conexão com o Firebase não foi inicializada")) {
-        errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel.';
+    const errorString = String(error.message || error).toLowerCase();
+    let errorMessage;
+
+    if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
+      errorMessage = 'Erro de permissão. Verifique as Regras de Segurança do seu banco de dados Firestore. Elas provavelmente estão bloqueando a escrita. Certifique-se que "allow write: if true;" está ativo.';
+    } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
+      errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel e faça um novo deploy.';
+    } else {
+      errorMessage = `Ocorreu um erro no servidor: ${error.message || 'Erro desconhecido.'}. Verifique se a API do Firestore está ativada no seu projeto Google Cloud.`;
     }
 
     return {
@@ -116,14 +119,17 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     }
   } catch (error: any) {
     console.error('Register Sale Action Error:', error);
-    let errorMessage = 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.';
-    
-    if (error.code === 'permission-denied') {
-        errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore no console do Firebase. Elas podem estar bloqueando a escrita.';
-    } else if (error.message && error.message.includes("A conexão com o Firebase não foi inicializada")) {
-        errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel.';
-    }
+    const errorString = String(error.message || error).toLowerCase();
+    let errorMessage;
 
+    if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
+      errorMessage = 'Erro de permissão. Verifique as Regras de Segurança do seu banco de dados Firestore. Elas provavelmente estão bloqueando a escrita. Certifique-se que "allow write: if true;" está ativo.';
+    } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
+      errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel e faça um novo deploy.';
+    } else {
+      errorMessage = `Ocorreu um erro no servidor: ${error.message || 'Erro desconhecido.'}. Verifique se a API do Firestore está ativada no seu projeto Google Cloud.`;
+    }
+    
     return {
       message: errorMessage,
       success: false,
@@ -180,12 +186,15 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
     }
   } catch (error: any) {
     console.error('Redeem Points Action Error:', error);
-    let errorMessage = 'Ocorreu um erro inesperado no servidor. Tente novamente mais tarde.';
-    
-    if (error.code === 'permission-denied') {
-        errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore no console do Firebase. Elas podem estar bloqueando a escrita.';
-    } else if (error.message && error.message.includes("A conexão com o Firebase não foi inicializada")) {
-        errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel.';
+    const errorString = String(error.message || error).toLowerCase();
+    let errorMessage;
+
+    if (errorString.includes('permission-denied') || errorString.includes('permissions')) {
+      errorMessage = 'Erro de permissão. Verifique as Regras de Segurança do seu banco de dados Firestore. Elas provavelmente estão bloqueando a escrita. Certifique-se que "allow write: if true;" está ativo.';
+    } else if (errorString.includes("firebase não foi inicializada") || errorString.includes("could not find firebase app")) {
+      errorMessage = 'Erro de configuração. Verifique se as variáveis de ambiente do Firebase (NEXT_PUBLIC_FIREBASE_*) estão configuradas corretamente no seu projeto Vercel e faça um novo deploy.';
+    } else {
+      errorMessage = `Ocorreu um erro no servidor: ${error.message || 'Erro desconhecido.'}. Verifique se a API do Firestore está ativada no seu projeto Google Cloud.`;
     }
 
     return {
