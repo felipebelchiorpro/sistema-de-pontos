@@ -36,7 +36,10 @@ export function PartnerTransactionsTable({ transactions }: PartnerTransactionsTa
           {transactions.map((transaction) => (
             <TableRow key={transaction.id}>
               <TableCell className="text-muted-foreground text-xs">
-                {new Date(transaction.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {transaction.date 
+                  ? new Date(transaction.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  : 'Data inválida'
+                }
               </TableCell>
               <TableCell>
                 <Badge variant={transaction.type === TransactionType.SALE ? "default" : "destructive"} className={transaction.type === TransactionType.SALE ? "bg-green-600/80 hover:bg-green-500/80" : "bg-red-600/80 hover:bg-red-500/80"}>
@@ -49,7 +52,7 @@ export function PartnerTransactionsTable({ transactions }: PartnerTransactionsTa
                   : "N/A"}
               </TableCell>
               <TableCell className="text-right text-muted-foreground hidden md:table-cell">
-                {transaction.type === TransactionType.SALE && transaction.originalSaleValue
+                {transaction.type === TransactionType.SALE && typeof transaction.originalSaleValue === 'number'
                   ? `R$ ${transaction.originalSaleValue.toFixed(2)}`
                   : "N/A"}
               </TableCell>

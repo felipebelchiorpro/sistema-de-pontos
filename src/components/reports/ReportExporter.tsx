@@ -9,7 +9,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Loader2 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 declare module "jspdf" {
@@ -80,13 +80,18 @@ export function ReportExporter({ summaryCardsData, partnersData }: ReportExporte
           (doc as any).autoTable({
             startY: yPos,
             head: [['Data', 'Tipo', 'ID Venda Ext.', 'Valor Venda (Orig.)', 'Pontos']],
-            body: transactions.map(t => [
-              format(parseISO(t.date), "dd/MM/yy HH:mm", { locale: ptBR }),
-              t.type,
-              t.externalSaleId || 'N/A',
-              t.originalSaleValue ? `R$ ${t.originalSaleValue.toFixed(2)}` : 'N/A',
-              `${t.type === TransactionType.SALE ? '+' : '-'}${t.amount.toFixed(2)}`
-            ]),
+            body: transactions.map(t => {
+              const date = parseISO(t.date);
+              const formattedDate = isValid(date) ? format(date, "dd/MM/yy HH:mm", { locale: ptBR }) : "Data inválida";
+              
+              return [
+                formattedDate,
+                t.type,
+                t.externalSaleId || 'N/A',
+                typeof t.originalSaleValue === 'number' ? `R$ ${t.originalSaleValue.toFixed(2)}` : 'N/A',
+                `${t.type === TransactionType.SALE ? '+' : '-'}${t.amount.toFixed(2)}`
+              ];
+            }),
             theme: 'striped',
             headStyles: { fillColor: [40, 40, 40] },
             styles: { fontSize: 8 },

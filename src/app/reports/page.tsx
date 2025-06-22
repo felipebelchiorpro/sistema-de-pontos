@@ -9,12 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { UserCircle, Award, Coins, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react";
 import type { Partner, Transaction } from "@/types";
 import { TransactionType } from "@/types";
+import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function ReportsPage() {
   const [partnersResult, allTransactionsResult] = await Promise.all([
     getPartners(),
     getAllTransactionsWithPartnerDetails()
   ]);
+
+  if (partnersResult.error || allTransactionsResult.error) {
+    const errorMessage = partnersResult.error || allTransactionsResult.error || "Erro desconhecido ao carregar os dados.";
+    return <ConfigError message={errorMessage} />
+  }
 
   const partners = partnersResult.partners || [];
   const allTransactions = allTransactionsResult.transactions || [];
@@ -37,9 +43,10 @@ export default async function ReportsPage() {
     { title: "Saldo de Pontos (Gerados - Resgatados)", value: pointsBalance.toFixed(2) + " pts", icon: Scale, color: pointsBalance >= 0 ? "text-chart-2" : "text-destructive" },
   ];
 
-  // More efficient data preparation for the PDF exporter and Accordion
   const transactionsByPartner = allTransactions.reduce<Record<string, Transaction[]>>((acc, t) => {
-    (acc[t.partnerId] = acc[t.partnerId] || []).push(t);
+    if (t.partnerId) {
+      (acc[t.partnerId] = acc[t.partnerId] || []).push(t);
+    }
     return acc;
   }, {});
 
