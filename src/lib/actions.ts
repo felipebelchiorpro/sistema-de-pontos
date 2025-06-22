@@ -1,4 +1,3 @@
-
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -107,6 +106,15 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined, saleDate);
     
     if (result.error) {
+       if (result.error.includes('function register_sale') && result.error.includes('does not exist')) {
+           const specificError = "Seu banco de dados está desatualizado. A função para registrar vendas não reconhece o campo de data. Por favor, execute o script SQL fornecido para corrigir o problema.";
+           return {
+               title: "Erro de Banco de Dados",
+               message: specificError,
+               success: false,
+               errors: { _form: [specificError] }
+           };
+       }
        return {
         title: "Erro",
         message: result.error,
