@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useActionState, useEffect } from 'react';
@@ -40,6 +39,7 @@ interface EditTransactionSheetProps {
   partners: Partner[];
 }
 
+// Validation schema for editing a SALE transaction
 const EditSaleSchema = z.object({
   partnerId: z.string().uuid({ message: "Por favor, selecione um parceiro." }),
   totalSaleValue: z.coerce.number().positive({ message: "O valor da venda deve ser positivo." }),
@@ -47,12 +47,14 @@ const EditSaleSchema = z.object({
   saleDate: z.date({ required_error: "A data da venda é obrigatória." }),
 });
 
+// Validation schema for editing a REDEMPTION transaction
 const EditRedemptionSchema = z.object({
   partnerId: z.string().uuid({ message: "Por favor, selecione um parceiro." }),
   pointsToRedeem: z.coerce.number().positive({ message: "Os pontos para resgate devem ser positivos." }),
   redemptionDate: z.date({ required_error: "A data do resgate é obrigatória." }),
 });
 
+// Helper to get the correct validation schema based on transaction type
 const getValidationSchema = (type: TransactionType) => {
     return type === TransactionType.SALE ? EditSaleSchema : EditRedemptionSchema;
 }
@@ -78,6 +80,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
   
   const form = useForm<EditFormData>({
     resolver: zodResolver(getValidationSchema(transaction.type)),
+    // Default values are set dynamically based on the transaction type
     defaultValues: transaction.type === TransactionType.SALE ? {
         partnerId: transaction.partnerId,
         totalSaleValue: transaction.originalSaleValue || 0,
@@ -91,7 +94,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
   });
 
    useEffect(() => {
-    // Reset form when a new transaction is passed in
+    // Reset form with new transaction data when it changes
     form.reset(
         transaction.type === TransactionType.SALE ? {
             partnerId: transaction.partnerId,
@@ -127,6 +130,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
     formData.append('transactionId', transaction.id);
     formData.append('transactionType', transaction.type);
 
+    // Append data specific to the transaction type
     if (transaction.type === TransactionType.SALE) {
         const saleData = data as z.infer<typeof EditSaleSchema>;
         formData.append('partnerId', saleData.partnerId);
@@ -154,6 +158,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
         </SheetHeader>
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 py-6">
+                {/* Conditional rendering for SALE transaction fields */}
                 {transaction.type === TransactionType.SALE && (
                     <>
                         <FormField control={form.control} name="partnerId" render={({ field }) => (
@@ -176,7 +181,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
                                 <FormControl>
                                     <div className="relative">
                                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} className="pl-9" />
+                                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.valueAsNumber || 0)} className="pl-9" />
                                     </div>
                                 </FormControl>
                                 <FormMessage />
@@ -185,7 +190,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
                         <FormField control={form.control} name="externalSaleId" render={({ field }) => (
                              <FormItem>
                                 <FormLabel>Código da Venda (Externo)</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
+                                <FormControl><Input {...field} value={field.value || ''} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -198,6 +203,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
                         )} />
                     </>
                 )}
+                {/* Conditional rendering for REDEMPTION transaction fields */}
                 {transaction.type === TransactionType.REDEMPTION && (
                     <>
                         <FormField control={form.control} name="partnerId" render={({ field }) => (
@@ -220,7 +226,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
                                 <FormControl>
                                     <div className="relative">
                                         <Gift className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} className="pl-9" />
+                                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.valueAsNumber || 0)} className="pl-9" />
                                     </div>
                                 </FormControl>
                                 <FormMessage />
@@ -231,7 +237,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
                                 <FormLabel>Data do Resgate</FormLabel>
                                 <DatePicker date={field.value} setDate={field.onChange} />
                                 <FormMessage />
-                            </FormItem>
+                             </FormItem>
                         )} />
                     </>
                 )}

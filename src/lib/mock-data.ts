@@ -217,17 +217,18 @@ export async function getAllTransactionsWithPartnerDetails(): Promise<{ transact
   const { supabase, error } = getSupabase();
   if (error) return { error };
 
-  // Switched to explicit select to avoid any ambiguity with '*' and joins.
+  // Corrected to use snake_case for column names in the select query.
+  // The Supabase client will automatically map these to camelCase in the returned data.
   const { data, error: dbError } = await supabase
     .from('transactions_v2')
     .select(`
       id, 
-      partnerId, 
+      partner_id, 
       type, 
       amount, 
-      originalSaleValue, 
-      discountedValue, 
-      externalSaleId, 
+      original_sale_value, 
+      discounted_value, 
+      external_sale_id, 
       date, 
       partners_v2 (name, coupon)
     `)
@@ -241,13 +242,19 @@ export async function getAllTransactionsWithPartnerDetails(): Promise<{ transact
     return { error: `Erro ao buscar transações: ${dbError.message}` };
   }
   
+  // The data from Supabase will have snake_case keys mapped to camelCase objects.
+  // We just need to flatten the nested partner details.
   const transactions = data?.map(item => {
       const { partners_v2, ...rest } = item;
+      // Because of auto-mapping, 'rest' will have fields like 'partnerId' (camelCase)
       const typedRest = rest as Omit<Transaction, 'partnerName' | 'partnerCoupon'>;
       return {
           ...typedRest,
+          // The nested object partners_v2 contains the partner details
           partnerName: partners_v2?.name,
-          partnerCoupon: partners_v2?.coupon
+          partnerCoupon: partners_v2?.coupon,
+          // Ensure partnerId is correctly assigned from the mapped partner_id
+          partnerId: (item as any).partner_id
       }
   }) as Transaction[] | undefined;
 
@@ -265,7 +272,7 @@ export async function getTransactionsForPartnerByDateRange(
   let query = supabase
     .from('transactions_v2')
     .select('*')
-    .eq('partnerId', partnerId);
+    .eq('partner_id', partnerId); // Corrected to use snake_case 'partner_id'
 
   if (startDateString) {
     query = query.gte('date', parseISO(startDateString).toISOString());
@@ -283,5 +290,7 @@ export async function getTransactionsForPartnerByDateRange(
     return { error: `Erro ao buscar transações do parceiro: ${dbError.message}` };
   }
 
+  // Supabase client auto-maps snake_case to camelCase, so the result 'data'
+  // will be an array of objects that match the 'Transaction' type.
   return { transactions: data };
 }
