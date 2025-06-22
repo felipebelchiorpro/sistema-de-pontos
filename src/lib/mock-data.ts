@@ -217,16 +217,31 @@ export async function getAllTransactionsWithPartnerDetails(): Promise<{ transact
   const { supabase, error } = getSupabase();
   if (error) return { error };
 
+  // This query is more robust. It fetches the latest partner details directly
+  // using a JOIN-like select, which is more reliable than the denormalized data.
   const { data, error: dbError } = await supabase
     .from('transactions_v2')
-    .select('*')
+    .select('*, partners_v2(name, coupon)') // Fetches related partner data
     .order('date', { ascending: false });
   
   if (dbError) {
-    console.error("Supabase getAllTransactions error:", dbError);
+    console.error("Supabase getAllTransactionsWithPartnerDetails error:", dbError);
     return { error: `Erro ao buscar transações: ${dbError.message}` };
   }
-  return { transactions: data };
+  
+  // The data now comes in as { ..., partners_v2: { name: '...', coupon: '...' } }
+  // We need to map it to the flat Transaction structure the rest of the app expects.
+  const transactions = data?.map(item => {
+      const { partners_v2, ...rest } = item;
+      const typedRest = rest as Omit<Transaction, 'partnerName' | 'partnerCoupon'>;
+      return {
+          ...typedRest,
+          partnerName: partners_v2?.name,
+          partnerCoupon: partners_v2?.coupon
+      }
+  }) as Transaction[] | undefined;
+
+  return { transactions };
 }
 
 export async function getTransactionsForPartnerByDateRange(
