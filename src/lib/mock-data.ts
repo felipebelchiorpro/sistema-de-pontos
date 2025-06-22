@@ -1,4 +1,3 @@
-
 // src/lib/mock-data.ts
 // THIS FILE IS NOW BACKED BY SUPABASE.
 import { getSupabase } from './supabase';
@@ -96,6 +95,7 @@ export async function registerSale(
   const { supabase, error } = getSupabase();
   if (error) return { success: false, message: error, error };
 
+  // Parameters are ordered alphabetically by the Supabase client.
   const { data, error: rpcError } = await supabase.rpc('register_sale', {
     p_coupon: coupon.toUpperCase(),
     p_external_sale_id: externalSaleId || null,
@@ -217,20 +217,30 @@ export async function getAllTransactionsWithPartnerDetails(): Promise<{ transact
   const { supabase, error } = getSupabase();
   if (error) return { error };
 
-  // This query is more robust. It fetches the latest partner details directly
-  // using a JOIN-like select, which is more reliable than the denormalized data.
+  // Switched to explicit select to avoid any ambiguity with '*' and joins.
   const { data, error: dbError } = await supabase
     .from('transactions_v2')
-    .select('*, partners_v2(name, coupon)') // Fetches related partner data
+    .select(`
+      id, 
+      partnerId, 
+      type, 
+      amount, 
+      originalSaleValue, 
+      discountedValue, 
+      externalSaleId, 
+      date, 
+      partners_v2 (name, coupon)
+    `)
     .order('date', { ascending: false });
   
   if (dbError) {
     console.error("Supabase getAllTransactionsWithPartnerDetails error:", dbError);
+     if (dbError.message.includes('does not exist')) {
+        return { error: `Erro de banco de dados: Uma coluna esperada não foi encontrada. Detalhes: ${dbError.message}. Verifique se o schema do banco de dados está atualizado com o último script SQL fornecido.` };
+    }
     return { error: `Erro ao buscar transações: ${dbError.message}` };
   }
   
-  // The data now comes in as { ..., partners_v2: { name: '...', coupon: '...' } }
-  // We need to map it to the flat Transaction structure the rest of the app expects.
   const transactions = data?.map(item => {
       const { partners_v2, ...rest } = item;
       const typedRest = rest as Omit<Transaction, 'partnerName' | 'partnerCoupon'>;

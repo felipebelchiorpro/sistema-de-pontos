@@ -88,7 +88,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="flex-1 flex flex-col">
+        <SidebarInset className="flex-1 flex flex-col overflow-y-auto">
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6">
                 <SidebarTrigger className="md:hidden" />
                 <div className="flex-1">
@@ -99,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
                 {/* Add User Avatar/Menu if needed */}
             </header>
-            <main className="flex-1 overflow-auto p-6 bg-background">
+            <main className="flex-1 p-6 bg-background">
               {children}
             </main>
         </SidebarInset>
