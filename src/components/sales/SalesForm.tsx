@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DollarSign, CheckCircle, ExternalLink, Calendar } from "lucide-react";
 import type { Partner } from "@/types";
 import { DatePicker } from "@/components/ui/date-picker";
-import { SheetSelect } from "../ui/sheet-select";
+import { ResponsiveSelect } from "../ui/responsive-select";
 
 const SaleSchema = z.object({
   coupon: z.string({ required_error: "Por favor, selecione um cupom." }).min(1, { message: "Cupom é obrigatório." }),
@@ -152,7 +152,7 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
                         <FormItem>
                             <FormLabel>Cupom do Parceiro</FormLabel>
                             <FormControl>
-                                <SheetSelect
+                                <ResponsiveSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     placeholder="Selecione um cupom"

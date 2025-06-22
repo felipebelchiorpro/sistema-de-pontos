@@ -27,6 +27,7 @@ interface ResponsiveSelectProps {
   placeholder: string
   options: { value: string; label: string }[]
   className?: string
+  title?: string // For sheet title
 }
 
 export function ResponsiveSelect({
@@ -35,6 +36,7 @@ export function ResponsiveSelect({
   placeholder,
   options,
   className,
+  title,
 }: ResponsiveSelectProps) {
   const isMobile = useIsMobile()
   const [open, setOpen] = React.useState(false)
@@ -49,17 +51,17 @@ export function ResponsiveSelect({
             {selectedOptionLabel}
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="h-[60vh] flex flex-col">
+        <SheetContent side="bottom" className="h-auto max-h-[80vh] flex flex-col">
           <SheetHeader className="mb-4">
-            <SheetTitle>{placeholder}</SheetTitle>
+            <SheetTitle>{title || placeholder}</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="flex-1">
-            <div className="flex flex-col gap-2 pr-4">
+          <ScrollArea className="flex-1 -mx-6">
+            <div className="flex flex-col gap-1 px-6">
               {options.length > 0 ? options.map((option) => (
                 <Button
                   key={option.value}
                   variant={value === option.value ? "default" : "ghost"}
-                  className="w-full justify-start p-4 h-auto"
+                  className="w-full justify-start p-4 h-auto text-left"
                   onClick={() => {
                     onValueChange(option.value)
                     setOpen(false)
@@ -81,11 +83,14 @@ export function ResponsiveSelect({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {options.length > 0 ? options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        )) : <p className="text-muted-foreground text-center p-4">Nenhuma opção disponível.</p>}
+        {options.length > 0 
+          ? options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            )) 
+          : <SelectItem value="no-options" disabled>Nenhuma opção disponível</SelectItem>
+        }
       </SelectContent>
     </Select>
   )
