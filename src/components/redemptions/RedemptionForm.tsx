@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Gift, CheckCircle } from "lucide-react";
 import type { Partner } from "@/types";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ResponsiveSelect } from "@/components/ui/responsive-select";
+import { SheetSelect } from "@/components/ui/sheet-select";
 
 const RedemptionSchema = z.object({
   coupon: z.string({ required_error: "Por favor, selecione um parceiro." }).min(1, { message: "Cupom é obrigatório." }),
@@ -132,10 +132,11 @@ export function RedemptionForm({ partners }: { partners: Partner[] }) {
                         <FormItem>
                             <FormLabel>Cupom do Parceiro</FormLabel>
                              <FormControl>
-                                <ResponsiveSelect
+                                <SheetSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     placeholder="Selecione um parceiro"
+                                    title="Selecionar Parceiro"
                                     options={partners.map((partner) => ({
                                         value: partner.coupon,
                                         label: `${partner.name} (${partner.coupon})`,
