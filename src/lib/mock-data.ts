@@ -95,12 +95,11 @@ export async function registerSale(
   const { supabase, error } = getSupabase();
   if (error) return { success: false, message: error, error };
 
-  // Parameters are ordered alphabetically by the Supabase client.
   const { data, error: rpcError } = await supabase.rpc('register_sale', {
     p_coupon: coupon.toUpperCase(),
+    p_total_sale_value: totalSaleValue,
     p_external_sale_id: externalSaleId || null,
-    p_sale_date: saleDate || null,
-    p_total_sale_value: totalSaleValue
+    p_sale_date: saleDate || null
   });
 
   if (rpcError) {
@@ -212,53 +211,47 @@ export async function updateRedemptionTransaction(
     return { success: result.success, message: result.message, error: !result.success ? result.message : undefined };
 }
 
-
 export async function getAllTransactionsWithPartnerDetails(): Promise<{ transactions?: Transaction[]; error?: string }> {
   const { supabase, error } = getSupabase();
   if (error) return { error };
 
-  // Corrected to use snake_case for column names in the select query.
-  // The Supabase client will automatically map these to camelCase in the returned data.
   const { data, error: dbError } = await supabase
     .from('transactions_v2')
     .select(`
-      id, 
-      partner_id, 
-      type, 
-      amount, 
-      original_sale_value, 
-      discounted_value, 
-      external_sale_id, 
-      date, 
+      id,
+      partner_id,
+      type,
+      amount,
+      original_sale_value,
+      discounted_value,
+      external_sale_id,
+      date,
       partners_v2 (name, coupon)
     `)
     .order('date', { ascending: false });
-  
+
   if (dbError) {
     console.error("Supabase getAllTransactionsWithPartnerDetails error:", dbError);
-     if (dbError.message.includes('does not exist')) {
+    if (dbError.message.includes('does not exist')) {
         return { error: `Erro de banco de dados: Uma coluna esperada não foi encontrada. Detalhes: ${dbError.message}. Verifique se o schema do banco de dados está atualizado com o último script SQL fornecido.` };
     }
     return { error: `Erro ao buscar transações: ${dbError.message}` };
   }
-  
-  // The data from Supabase will have snake_case keys mapped to camelCase objects.
-  // We just need to flatten the nested partner details.
-  const transactions = data?.map(item => {
-      const { partners_v2, ...rest } = item;
-      // Because of auto-mapping, 'rest' will have fields like 'partnerId' (camelCase)
-      const typedRest = rest as Omit<Transaction, 'partnerName' | 'partnerCoupon'>;
-      return {
-          ...typedRest,
-          // The nested object partners_v2 contains the partner details
-          partnerName: partners_v2?.name,
-          partnerCoupon: partners_v2?.coupon,
-          // Ensure partnerId is correctly assigned from the mapped partner_id
-          partnerId: (item as any).partner_id
-      }
-  }) as Transaction[] | undefined;
 
-  return { transactions };
+  const transactions = data?.map(item => ({
+    id: item.id,
+    partnerId: item.partner_id,
+    type: item.type,
+    amount: item.amount,
+    originalSaleValue: item.original_sale_value,
+    discountedValue: item.discounted_value,
+    externalSaleId: item.external_sale_id,
+    date: item.date,
+    partnerName: item.partners_v2?.name,
+    partnerCoupon: item.partners_v2?.coupon,
+  }));
+
+  return { transactions: transactions as Transaction[] };
 }
 
 export async function getTransactionsForPartnerByDateRange(
@@ -271,8 +264,8 @@ export async function getTransactionsForPartnerByDateRange(
 
   let query = supabase
     .from('transactions_v2')
-    .select('*')
-    .eq('partner_id', partnerId); // Corrected to use snake_case 'partner_id'
+    .select('*') // Selects all snake_case columns
+    .eq('partner_id', partnerId);
 
   if (startDateString) {
     query = query.gte('date', parseISO(startDateString).toISOString());
@@ -290,7 +283,19 @@ export async function getTransactionsForPartnerByDateRange(
     return { error: `Erro ao buscar transações do parceiro: ${dbError.message}` };
   }
 
-  // Supabase client auto-maps snake_case to camelCase, so the result 'data'
-  // will be an array of objects that match the 'Transaction' type.
-  return { transactions: data };
+  // Explicit mapping from snake_case to camelCase
+  const transactions = data?.map(item => ({
+    id: item.id,
+    partnerId: item.partner_id,
+    type: item.type,
+    amount: item.amount,
+    originalSaleValue: item.original_sale_value,
+    discountedValue: item.discounted_value,
+    externalSaleId: item.external_sale_id,
+    date: item.date,
+    partnerName: item.partner_name,
+    partnerCoupon: item.partner_coupon,
+  }));
+
+  return { transactions: transactions as Transaction[] };
 }
