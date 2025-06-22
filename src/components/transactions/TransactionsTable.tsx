@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { Transaction } from "@/types";
 import { TransactionType } from "@/types";
+import { TransactionActions } from "./TransactionActions";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -31,6 +32,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
             <TableHead className="hidden md:table-cell">ID Venda Ext.</TableHead>
             <TableHead className="text-right hidden md:table-cell">Valor Venda (Orig.)</TableHead>
             <TableHead className="text-right">Pontos</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -63,6 +65,9 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
               </TableCell>
               <TableCell className={`text-right font-semibold ${transaction.type === TransactionType.SALE ? 'text-chart-4' : 'text-destructive'}`}>
                 {transaction.type === TransactionType.SALE ? '+' : '-'}{transaction.amount.toFixed(2)}
+              </TableCell>
+              <TableCell className="text-right">
+                <TransactionActions transaction={transaction} />
               </TableCell>
             </TableRow>
           ))}

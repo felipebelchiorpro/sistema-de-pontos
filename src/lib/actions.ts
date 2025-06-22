@@ -1,3 +1,4 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -9,6 +10,7 @@ import {
   getPartnerByCoupon,
   getPartnerById,
   getTransactionsForPartnerByDateRange,
+  deleteTransaction as dbDeleteTransaction,
 } from './mock-data';
 import type { Partner, Transaction } from '@/types';
 import { getSupabase } from './supabase';
@@ -228,6 +230,30 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
     };
   }
 }
+
+export async function deleteTransactionAction(transactionId: string): Promise<{ success: boolean; message: string; }> {
+  if (!transactionId) {
+    return { success: false, message: 'ID da transação é obrigatório.' };
+  }
+
+  try {
+    const result = await dbDeleteTransaction(transactionId);
+    if (result.success) {
+      revalidatePath('/');
+      revalidatePath('/transactions');
+      revalidatePath('/reports');
+      revalidatePath('/partners');
+      return { success: true, message: result.message };
+    } else {
+      return { success: false, message: result.message };
+    }
+  } catch (error: any) {
+    console.error('Delete Transaction Action - Unexpected Error:', error);
+    const errorMessage = `Ocorreu um erro inesperado: ${error.message || error}.`;
+    return { success: false, message: errorMessage };
+  }
+}
+
 
 export async function fetchIndividualPartnerReportDataAction(
   partnerId: string,

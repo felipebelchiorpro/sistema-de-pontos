@@ -1,3 +1,4 @@
+
 // src/lib/mock-data.ts
 // THIS FILE IS NOW BACKED BY SUPABASE.
 import { getSupabase } from './supabase';
@@ -95,7 +96,6 @@ export async function registerSale(
   const { supabase, error } = getSupabase();
   if (error) return { success: false, message: error, error };
 
-  // Parameters are ordered alphabetically to match the corrected SQL function signature.
   const { data, error: rpcError } = await supabase.rpc('register_sale', {
     p_coupon: coupon.toUpperCase(),
     p_external_sale_id: externalSaleId || null,
@@ -138,6 +138,28 @@ export async function redeemPoints(coupon: string, pointsToRedeem: number): Prom
     error: !result.success ? result.message : undefined
   };
 }
+
+export async function deleteTransaction(transactionId: string): Promise<{ success: boolean; message: string; error?: string }> {
+  const { supabase, error } = getSupabase();
+  if (error) return { success: false, message: error, error };
+
+  const { data, error: rpcError } = await supabase.rpc('delete_transaction', {
+    p_transaction_id: transactionId
+  });
+
+  if (rpcError) {
+    console.error('Supabase deleteTransaction RPC error:', rpcError);
+    return { success: false, message: `Erro no RPC de exclusão: ${rpcError.message}`, error: rpcError.message };
+  }
+  
+  const result = data[0];
+  return {
+    success: result.success,
+    message: result.message,
+    error: !result.success ? result.message : undefined
+  };
+}
+
 
 export async function getAllTransactionsWithPartnerDetails(): Promise<{ transactions?: Transaction[]; error?: string }> {
   const { supabase, error } = getSupabase();

@@ -12,12 +12,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { registerSaleAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, CheckCircle, ExternalLink, Calendar } from "lucide-react";
 import type { Partner } from "@/types";
 import { DatePicker } from "@/components/ui/date-picker";
-import { ResponsiveSelect } from "../ui/responsive-select";
+
 
 const SaleSchema = z.object({
   coupon: z.string({ required_error: "Por favor, selecione um cupom." }).min(1, { message: "Cupom é obrigatório." }),
@@ -151,19 +158,24 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Cupom do Parceiro</FormLabel>
-                            <FormControl>
-                                <ResponsiveSelect
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                    placeholder="Selecione um cupom"
-                                    title="Selecionar Cupom"
-                                    options={partners.map((partner) => ({
-                                        value: partner.coupon,
-                                        label: `${partner.name} (${partner.coupon})`,
-                                    }))}
-                                    className="bg-input"
-                                />
-                            </FormControl>
+                             <Select onValueChange={field.onChange} value={field.value || ""} defaultValue={field.value || ""}>
+                                <FormControl>
+                                    <SelectTrigger className="bg-input">
+                                        <SelectValue placeholder="Selecione um cupom" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {partners.length > 0 ? (
+                                        partners.map((partner) => (
+                                            <SelectItem key={partner.coupon} value={partner.coupon}>
+                                                {partner.name} ({partner.coupon})
+                                            </SelectItem>
+                                        ))
+                                    ) : (
+                                        <SelectItem value="no-options" disabled>Nenhum parceiro cadastrado</SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                         </FormItem>
                     )}
