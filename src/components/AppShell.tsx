@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -87,7 +88,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+        <SidebarInset className="flex-1 flex flex-col">
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6">
                 <SidebarTrigger className="md:hidden" />
                 <div className="flex-1">

@@ -158,7 +158,7 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Cupom do Parceiro</FormLabel>
-                             <Select onValueChange={field.onChange} value={field.value || ""} defaultValue={field.value || ""}>
+                             <Select onValueChange={field.onChange} value={field.value || ""}>
                                 <FormControl>
                                     <SelectTrigger className="bg-input">
                                         <SelectValue placeholder="Selecione um cupom" />
