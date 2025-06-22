@@ -95,11 +95,12 @@ export async function registerSale(
   const { supabase, error } = getSupabase();
   if (error) return { success: false, message: error, error };
 
+  // Parameters are ordered alphabetically to match the corrected SQL function signature.
   const { data, error: rpcError } = await supabase.rpc('register_sale', {
     p_coupon: coupon.toUpperCase(),
-    p_total_sale_value: totalSaleValue,
     p_external_sale_id: externalSaleId || null,
-    p_sale_date: saleDate || null
+    p_sale_date: saleDate || null,
+    p_total_sale_value: totalSaleValue
   });
 
   if (rpcError) {
