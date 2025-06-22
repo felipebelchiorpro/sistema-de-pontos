@@ -8,15 +8,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Transaction } from "@/types";
+import type { Partner, Transaction } from "@/types";
 import { TransactionType } from "@/types";
 import { TransactionActions } from "./TransactionActions";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
+  partners: Partner[];
 }
 
-export function TransactionsTable({ transactions }: TransactionsTableProps) {
+export function TransactionsTable({ transactions, partners }: TransactionsTableProps) {
   if (transactions.length === 0) {
     return <p className="text-sm text-muted-foreground text-center py-4">Nenhuma transação encontrada.</p>;
   }
@@ -59,7 +60,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                   : "N/A"}
               </TableCell>
               <TableCell className="text-right text-muted-foreground hidden md:table-cell">
-                {transaction.type === TransactionType.SALE && transaction.originalSaleValue
+                {transaction.type === TransactionType.SALE && transaction.originalSaleValue != null
                   ? `R$ ${transaction.originalSaleValue.toFixed(2)}`
                   : "N/A"}
               </TableCell>
@@ -67,7 +68,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                 {transaction.type === TransactionType.SALE ? '+' : '-'}{transaction.amount.toFixed(2)}
               </TableCell>
               <TableCell className="text-right">
-                <TransactionActions transaction={transaction} />
+                <TransactionActions transaction={transaction} partners={partners} />
               </TableCell>
             </TableRow>
           ))}

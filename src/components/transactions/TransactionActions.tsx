@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import { deleteTransactionAction } from '@/lib/actions';
 import {
   DropdownMenu,
@@ -22,14 +22,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import type { Transaction } from '@/types';
+import type { Partner, Transaction } from '@/types';
+import { EditTransactionSheet } from './EditTransactionSheet';
 
 interface TransactionActionsProps {
   transaction: Transaction;
+  partners: Partner[];
 }
 
-export function TransactionActions({ transaction }: TransactionActionsProps) {
+export function TransactionActions({ transaction, partners }: TransactionActionsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -62,6 +65,10 @@ export function TransactionActions({ transaction }: TransactionActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Editar
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive"
             onSelect={() => setIsDeleteDialogOpen(true)}
@@ -71,6 +78,13 @@ export function TransactionActions({ transaction }: TransactionActionsProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <EditTransactionSheet 
+        isOpen={isEditDialogOpen}
+        setIsOpen={setIsEditDialogOpen}
+        transaction={transaction}
+        partners={partners}
+      />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

@@ -160,6 +160,58 @@ export async function deleteTransaction(transactionId: string): Promise<{ succes
   };
 }
 
+export async function updateSaleTransaction(
+    transactionId: string,
+    newPartnerId: string,
+    newTotalSaleValue: number,
+    newExternalSaleId?: string,
+    newSaleDate?: string
+): Promise<{ success: boolean; message: string; error?: string }> {
+    const { supabase, error } = getSupabase();
+    if (error) return { success: false, message: error, error };
+
+    const { data, error: rpcError } = await supabase.rpc('update_sale_transaction', {
+        p_transaction_id: transactionId,
+        p_new_partner_id: newPartnerId,
+        p_new_total_sale_value: newTotalSaleValue,
+        p_new_external_sale_id: newExternalSaleId || null,
+        p_new_sale_date: newSaleDate || null,
+    });
+    
+    if (rpcError) {
+        console.error('Supabase updateSaleTransaction RPC error:', rpcError);
+        return { success: false, message: `Erro no RPC de edição de venda: ${rpcError.message}`, error: rpcError.message };
+    }
+
+    const result = data[0];
+    return { success: result.success, message: result.message, error: !result.success ? result.message : undefined };
+}
+
+export async function updateRedemptionTransaction(
+    transactionId: string,
+    newPartnerId: string,
+    newPointsToRedeem: number,
+    newRedemptionDate?: string
+): Promise<{ success: boolean; message: string; error?: string }> {
+    const { supabase, error } = getSupabase();
+    if (error) return { success: false, message: error, error };
+    
+    const { data, error: rpcError } = await supabase.rpc('update_redemption_transaction', {
+        p_transaction_id: transactionId,
+        p_new_partner_id: newPartnerId,
+        p_new_points_to_redeem: newPointsToRedeem,
+        p_new_redemption_date: newRedemptionDate || null
+    });
+
+    if (rpcError) {
+        console.error('Supabase updateRedemptionTransaction RPC error:', rpcError);
+        return { success: false, message: `Erro no RPC de edição de resgate: ${rpcError.message}`, error: rpcError.message };
+    }
+
+    const result = data[0];
+    return { success: result.success, message: result.message, error: !result.success ? result.message : undefined };
+}
+
 
 export async function getAllTransactionsWithPartnerDetails(): Promise<{ transactions?: Transaction[]; error?: string }> {
   const { supabase, error } = getSupabase();

@@ -11,8 +11,11 @@ import {
   getPartnerById,
   getTransactionsForPartnerByDateRange,
   deleteTransaction as dbDeleteTransaction,
+  updateSaleTransaction as dbUpdateSaleTransaction,
+  updateRedemptionTransaction as dbUpdateRedemptionTransaction
 } from './mock-data';
 import type { Partner, Transaction } from '@/types';
+import { TransactionType } from '@/types';
 import { getSupabase } from './supabase';
 
 const PartnerSchema = z.object({
@@ -108,8 +111,8 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined, saleDate);
     
     if (result.error) {
-       if (result.error.includes('function register_sale') && result.error.includes('does not exist')) {
-           const specificError = "Seu banco de dados está desatualizado. A função para registrar vendas não reconhece o campo de data. Por favor, execute o script SQL fornecido para corrigir o problema.";
+       if (result.error.includes('function register_sale') && (result.error.includes('does not exist') || result.error.includes('no function matches'))) {
+           const specificError = "Seu banco de dados está desatualizado. A função para registrar vendas não foi encontrada ou não corresponde à assinatura esperada. Por favor, execute o script SQL fornecido na documentação para corrigir o problema.";
            return {
                title: "Erro de Banco de Dados",
                message: specificError,
@@ -307,4 +310,67 @@ export async function testSupabaseConnectionAction(): Promise<{ success: boolean
   } catch (e: any) {
     return { success: false, message: `Erro inesperado durante o teste: ${e.message}` };
   }
+}
+
+const UpdateTransactionSchema = z.object({
+  transactionId: z.string().uuid(),
+  transactionType: z.nativeEnum(TransactionType),
+  partnerId: z.string().uuid(),
+  // Sale fields
+  totalSaleValue: z.coerce.number().optional(),
+  externalSaleId: z.string().optional(),
+  saleDate: z.string().optional(),
+  // Redemption fields
+  pointsToRedeem: z.coerce.number().optional(),
+  redemptionDate: z.string().optional(),
+});
+
+
+export async function updateTransactionAction(prevState: any, formData: FormData) {
+    const validatedFields = UpdateTransactionSchema.safeParse({
+        transactionId: formData.get('transactionId'),
+        transactionType: formData.get('transactionType'),
+        partnerId: formData.get('partnerId'),
+        totalSaleValue: formData.get('totalSaleValue'),
+        externalSaleId: formData.get('externalSaleId'),
+        saleDate: formData.get('saleDate'),
+        pointsToRedeem: formData.get('pointsToRedeem'),
+        redemptionDate: formData.get('redemptionDate'),
+    });
+
+    if (!validatedFields.success) {
+        return { success: false, title: "Erro de Validação", message: 'Dados de edição inválidos.' };
+    }
+
+    const { transactionId, transactionType, partnerId, totalSaleValue, externalSaleId, saleDate, pointsToRedeem, redemptionDate } = validatedFields.data;
+
+    try {
+        let result;
+        if (transactionType === TransactionType.SALE) {
+            if (!totalSaleValue) {
+                 return { success: false, title: "Erro de Validação", message: 'Valor da venda é obrigatório para editar uma venda.' };
+            }
+            result = await dbUpdateSaleTransaction(transactionId, partnerId, totalSaleValue, externalSaleId || undefined, saleDate);
+        } else if (transactionType === TransactionType.REDEMPTION) {
+            if (!pointsToRedeem) {
+                 return { success: false, title: "Erro de Validação", message: 'Pontos a resgatar são obrigatórios para editar um resgate.' };
+            }
+             result = await dbUpdateRedemptionTransaction(transactionId, partnerId, pointsToRedeem, redemptionDate);
+        } else {
+            return { success: false, title: "Erro", message: "Tipo de transação desconhecido." };
+        }
+
+        if (result.success) {
+            revalidatePath('/');
+            revalidatePath('/transactions');
+            revalidatePath('/reports');
+            revalidatePath('/partners');
+            return { success: true, title: "Sucesso!", message: result.message };
+        } else {
+            return { success: false, title: "Erro ao Atualizar", message: result.message || "Ocorreu um erro desconhecido." };
+        }
+
+    } catch (error: any) {
+        return { success: false, title: "Erro Inesperado", message: `Ocorreu um erro inesperado: ${error.message || error}.` };
+    }
 }
