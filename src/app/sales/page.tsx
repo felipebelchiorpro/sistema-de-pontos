@@ -1,9 +1,15 @@
 
 import { SalesForm } from "@/components/sales/SalesForm";
 import { getPartners } from "@/lib/mock-data";
+import { ConfigError } from "@/components/config-error/ConfigError";
 
 export default async function SalesPage() {
   const partnersResult = await getPartners();
+  
+  if (partnersResult.error) {
+    return <ConfigError message={partnersResult.error} />;
+  }
+  
   const partners = partnersResult.partners || [];
 
   return (

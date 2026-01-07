@@ -1,3 +1,4 @@
+
 import { SupabaseTest } from "@/components/settings/SupabaseTest";
 
 export default function SettingsPage() {

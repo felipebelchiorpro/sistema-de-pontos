@@ -7,7 +7,6 @@ import {
   addPartner as dbAddPartner,
   registerSale as dbRegisterSale,
   redeemPoints as dbRedeemPoints,
-  getPartnerByCoupon,
   getPartnerById,
   getTransactionsForPartnerByDateRange,
   deleteTransaction as dbDeleteTransaction,

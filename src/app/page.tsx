@@ -6,12 +6,19 @@ import { getPartners, getAllTransactionsWithPartnerDetails } from "@/lib/mock-da
 import { TransactionType } from "@/types";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { TopPartnersChart } from "@/components/dashboard/TopPartnersChart";
+import { ConfigError } from "@/components/config-error/ConfigError";
+
 
 export default async function DashboardPage() {
   const [partnersResult, transactionsResult] = await Promise.all([
     getPartners(),
     getAllTransactionsWithPartnerDetails()
   ]);
+  
+  if (partnersResult.error || transactionsResult.error) {
+    const errorMessage = partnersResult.error || transactionsResult.error || "Ocorreu um erro desconhecido ao carregar os dados.";
+    return <ConfigError message={errorMessage} />;
+  }
 
   const partners = partnersResult.partners || [];
   const transactions = transactionsResult.transactions || [];
