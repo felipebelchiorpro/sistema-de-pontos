@@ -22,11 +22,8 @@ export interface Transaction {
   externalSaleId?: string; // ID from external system, only for sales
   date: string; // ISO string
 }
-<<<<<<< HEAD
-=======
 
 export interface PartnerFormValues {
   name: string;
   coupon: string;
 }
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)

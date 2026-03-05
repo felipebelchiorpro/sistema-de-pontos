@@ -14,11 +14,7 @@ export default async function DashboardPage() {
     getPartners(),
     getAllTransactionsWithPartnerDetails()
   ]);
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   if (partnersResult.error || transactionsResult.error) {
     const errorMessage = partnersResult.error || transactionsResult.error || "Ocorreu um erro desconhecido ao carregar os dados.";
     return <ConfigError message={errorMessage} />;
@@ -40,17 +36,10 @@ export default async function DashboardPage() {
 
 
   const statCards = [
-<<<<<<< HEAD
-    { title: "Total de Parceiros", value: totalPartners, icon: Users, color: "text-primary", href:"/partners" },
-    { title: "Vendas Totais (Valor Bruto)", value: `R$ ${totalSalesValue.toFixed(2)}`, icon: ShoppingCart, color: "text-chart-4", href:"/sales" },
-    { title: "Total Pontos Gerados", value: totalPointsGenerated.toFixed(2), icon: BarChart3, color: "text-chart-3", href:"/reports" },
-    { title: "Total Pontos Resgatados", value: totalPointsRedeemed.toFixed(2), icon: Gift, color: "text-destructive", href:"/redemptions" },
-=======
     { title: "Total de Parceiros", value: totalPartners, icon: Users, color: "text-primary", href: "/partners" },
     { title: "Vendas Totais (Valor Bruto)", value: `R$ ${totalSalesValue.toFixed(2)}`, icon: ShoppingCart, color: "text-chart-4", href: "/sales" },
     { title: "Total Pontos Gerados", value: totalPointsGenerated.toFixed(2), icon: BarChart3, color: "text-chart-3", href: "/reports" },
     { title: "Total Pontos Resgatados", value: totalPointsRedeemed.toFixed(2), icon: Gift, color: "text-destructive", href: "/redemptions" },
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   ];
 
   // DATA FOR CHARTS
@@ -58,28 +47,16 @@ export default async function DashboardPage() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setHours(0, 0, 0, 0);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   const salesByDay = new Map<string, number>();
   for (let i = 29; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-<<<<<<< HEAD
-    d.setHours(0,0,0,0);
-    const dateString = d.toISOString().split('T')[0];
-    salesByDay.set(dateString, 0);
-  }
-  
-=======
     d.setHours(0, 0, 0, 0);
     const dateString = d.toISOString().split('T')[0];
     salesByDay.set(dateString, 0);
   }
 
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   transactions
     .filter(t => t.type === TransactionType.SALE && new Date(t.date) >= thirtyDaysAgo)
     .forEach(t => {
@@ -93,11 +70,7 @@ export default async function DashboardPage() {
       total,
       fullDate: date,
     }))
-<<<<<<< HEAD
-    .sort((a,b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
-=======
     .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
 
   // 2. Top 5 partners by points
   const topPartners = [...partners]
@@ -115,20 +88,12 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-<<<<<<< HEAD
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card) => (
-          <Link href={card.href} key={card.title}>
-            <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer bg-card hover:bg-secondary/50">
-=======
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
           <Link href={card.href} key={card.title}>
             <Card className="relative overflow-hidden hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer bg-card/50 backdrop-blur-sm border-white/5 group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {card.title}
@@ -144,11 +109,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<<<<<<< HEAD
-        <Card className="bg-card">
-=======
         <Card className="bg-card/40 backdrop-blur-md border-white/5 shadow-xl">
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" /> Vendas nos Últimos 30 Dias
@@ -162,11 +123,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-<<<<<<< HEAD
-        <Card className="bg-card">
-=======
         <Card className="bg-card/40 backdrop-blur-md border-white/5 shadow-xl">
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5" /> Top 5 Parceiros por Pontos
@@ -181,11 +138,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-<<<<<<< HEAD
-      <Card className="bg-card">
-=======
       <Card className="bg-card/40 backdrop-blur-md border-white/5 shadow-xl">
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         <CardHeader>
           <CardTitle>Transações Recentes</CardTitle>
           <CardDescription>Últimas 5 transações registradas no sistema.</CardDescription>
@@ -204,17 +157,10 @@ export default async function DashboardPage() {
                   <div className={`font-semibold ${transaction.type === TransactionType.SALE ? 'text-chart-4' : 'text-destructive'}`}>
                     {transaction.type === TransactionType.SALE ? '+' : '-'}{transaction.amount.toFixed(2)} pts
                     {transaction.type === TransactionType.SALE && transaction.originalSaleValue && (
-<<<<<<< HEAD
-                       <span className="text-xs text-muted-foreground ml-2">
-                         (Venda: R$ {transaction.originalSaleValue.toFixed(2)}
-                         {transaction.externalSaleId && `, ID Ext: ${transaction.externalSaleId}`})
-                       </span>
-=======
                       <span className="text-xs text-muted-foreground ml-2">
                         (Venda: R$ {transaction.originalSaleValue.toFixed(2)}
                         {transaction.externalSaleId && `, ID Ext: ${transaction.externalSaleId}`})
                       </span>
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
                     )}
                   </div>
                 </li>

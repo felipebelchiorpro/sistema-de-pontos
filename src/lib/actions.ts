@@ -15,19 +15,11 @@ import {
 } from './mock-data';
 import type { Partner, Transaction } from '@/types';
 import { TransactionType } from '@/types';
-<<<<<<< HEAD
-import { getSupabase } from './supabase';
-
-const PartnerSchema = z.object({
-  name: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres.' }),
-  coupon: z.string().min(3, { message: 'Cupom deve ter pelo menos 3 caracteres.' }).regex(/^[A-Z0-9]+$/, { message: 'Cupom deve conter apenas letras maiúsculas e números.'}),
-=======
 import { pb } from './pocketbase';
 
 const PartnerSchema = z.object({
   name: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres.' }),
   coupon: z.string().min(3, { message: 'Cupom deve ter pelo menos 3 caracteres.' }).regex(/^[A-Z0-9]+$/, { message: 'Cupom deve conter apenas letras maiúsculas e números.' }),
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
 });
 
 export async function addPartnerAction(prevState: any, formData: FormData) {
@@ -46,20 +38,12 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
   }
 
   const { name, coupon } = validatedFields.data;
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   try {
     const result = await dbAddPartner(name, coupon.toUpperCase());
 
     if (result.error) {
-<<<<<<< HEAD
-       return {
-=======
       return {
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         title: "Erro de Configuração",
         message: result.error,
         success: false,
@@ -80,11 +64,7 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
       if (result.message.toLowerCase().includes('cupom')) {
         errors.coupon = [result.message];
       } else {
-<<<<<<< HEAD
-        errors._form = [result.message]; 
-=======
         errors._form = [result.message];
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       }
       return { title: "Erro ao Adicionar", message: result.message, success: false, errors };
     }
@@ -103,13 +83,8 @@ export async function addPartnerAction(prevState: any, formData: FormData) {
 const SaleSchema = z.object({
   coupon: z.string().min(1, { message: 'Cupom é obrigatório.' }),
   totalSaleValue: z.coerce.number().positive({ message: 'Valor da venda deve ser positivo.' }),
-<<<<<<< HEAD
-  externalSaleId: z.string().optional(),
-  saleDate: z.string().optional(),
-=======
   externalSaleId: z.string().nullable().optional(),
   saleDate: z.string().nullable().optional(),
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
 });
 
 export async function registerSaleAction(prevState: any, formData: FormData) {
@@ -124,37 +99,12 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
     return {
       title: "Erro de Validação",
       message: 'Dados inválidos.',
-<<<<<<< HEAD
-      errors: validatedFields.error.flatten().fieldErrors,
-=======
       errors: validatedFields.error.flatten().fieldErrors as Record<string, string[]>,
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       success: false,
     };
   }
 
   const { coupon, totalSaleValue, externalSaleId, saleDate } = validatedFields.data;
-<<<<<<< HEAD
-  
-  try {
-    const result = await dbRegisterSale(coupon.toUpperCase(), totalSaleValue, externalSaleId || undefined, saleDate);
-    
-    if (result.error) {
-       if (result.error.includes('function register_sale') && (result.error.includes('does not exist') || result.error.includes('no function matches'))) {
-           const specificError = "Seu banco de dados está desatualizado. A função para registrar vendas não foi encontrada ou não corresponde à assinatura esperada. Por favor, execute o script SQL fornecido na documentação para corrigir o problema.";
-           return {
-               title: "Erro de Banco de Dados",
-               message: specificError,
-               success: false,
-               errors: { _form: [specificError] }
-           };
-       }
-       return {
-        title: "Erro",
-        message: result.error,
-        success: false,
-        errors: { _form: [result.error] }
-=======
 
   try {
     console.log("=> registerSaleAction DB call with:", { coupon: coupon.toUpperCase(), totalSaleValue, externalSaleId, saleDate });
@@ -179,7 +129,6 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
         errors: { _form: [result.error] },
         pointsGenerated: undefined,
         discountedValue: undefined,
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       };
     }
 
@@ -193,10 +142,7 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       return {
         title: "Sucesso!",
         message: result.message,
-<<<<<<< HEAD
-=======
         errors: {},
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         success: true,
         pointsGenerated: result.pointsGenerated,
         discountedValue: result.discountedValue
@@ -208,11 +154,7 @@ export async function registerSaleAction(prevState: any, formData: FormData) {
       } else if (result.message.toLowerCase().includes("valor da venda") || result.message.toLowerCase().includes("valor")) {
         fieldErrors.totalSaleValue = [result.message];
       } else {
-<<<<<<< HEAD
-        fieldErrors._form = [result.message]; 
-=======
         fieldErrors._form = [result.message];
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       }
       return { title: "Erro na Venda", message: result.message, success: false, errors: fieldErrors };
     }
@@ -247,27 +189,6 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
       success: false,
     };
   }
-<<<<<<< HEAD
-  
-  try {
-    const { coupon, pointsToRedeem } = validatedFields.data;
-    const result = await dbRedeemPoints(coupon.toUpperCase(), pointsToRedeem);
-    
-    if (result.error) {
-       const fieldErrors: Record<string, string[]> = {};
-       const lowerCaseError = result.error.toLowerCase();
-       
-       if (lowerCaseError.includes("configuração")) {
-          fieldErrors._form = [result.error];
-       } else if (lowerCaseError.includes("cupom")) {
-         fieldErrors.coupon = [result.error];
-       } else if (lowerCaseError.includes("pontos insuficientes")) {
-         fieldErrors.pointsToRedeem = [result.error];
-       } else {
-         fieldErrors._form = [result.error];
-       }
-       return { title: "Erro no Resgate", message: result.error, success: false, errors: fieldErrors };
-=======
 
   try {
     const { coupon, pointsToRedeem } = validatedFields.data;
@@ -287,7 +208,6 @@ export async function redeemPointsAction(prevState: any, formData: FormData) {
         fieldErrors._form = [result.error];
       }
       return { title: "Erro no Resgate", message: result.error, success: false, errors: fieldErrors };
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
     }
 
 
@@ -354,11 +274,7 @@ export async function fetchIndividualPartnerReportDataAction(
     if (!partnerResult.partner) {
       return { error: "Parceiro não encontrado." };
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
     const transactionsResult = await getTransactionsForPartnerByDateRange(partnerId, startDate, endDate);
     if (transactionsResult.error) return { error: transactionsResult.error };
 
@@ -369,37 +285,6 @@ export async function fetchIndividualPartnerReportDataAction(
   }
 }
 
-<<<<<<< HEAD
-export async function testSupabaseConnectionAction(): Promise<{ success: boolean; message: string; }> {
-  const { supabase, error } = getSupabase();
-
-  if (error) {
-    return { success: false, message: `A inicialização do Supabase falhou. Motivo: ${error}` };
-  }
-  
-  if (!supabase) {
-     return { success: false, message: 'A instância do Supabase não está disponível, mas nenhum erro explícito foi retornado. Isso é um estado inesperado.' };
-  }
-
-  try {
-    // Attempt to fetch a single row. This tests connection, URL, anon key, and RLS policies for read.
-    const { error: dbError } = await supabase.from('partners_v2').select('id').limit(1);
-
-    if (dbError) {
-      if (dbError.message.includes('JWT') || dbError.message.includes('anon key')) {
-        return { success: false, message: `Erro de autenticação com o Supabase: ${dbError.message}. Verifique se a 'NEXT_PUBLIC_SUPABASE_ANON_KEY' está correta.` };
-      }
-      if (dbError.message.includes('fetch')) {
-         return { success: false, message: `Erro de rede ao conectar ao Supabase: ${dbError.message}. Verifique se a 'NEXT_PUBLIC_SUPABASE_URL' está correta e se não há problemas de CORS.` };
-      }
-       return { success: false, message: `Erro ao comunicar com o Supabase: ${dbError.message}. Verifique se a tabela 'partners_v2' existe e se as políticas de RLS permitem leitura.` };
-    }
-    
-    return { success: true, message: 'Conexão com o Supabase estabelecida com sucesso!' };
-
-  } catch (e: any) {
-    return { success: false, message: `Erro inesperado durante o teste: ${e.message}` };
-=======
 export async function testPocketBaseConnectionAction(): Promise<{ success: boolean; message: string; }> {
   try {
     // A simple authenticated call to check connection & rights
@@ -412,7 +297,6 @@ export async function testPocketBaseConnectionAction(): Promise<{ success: boole
       return { success: false, message: `Erro de rede ao conectar ao PocketBase: ${e.message}. Verifique se a URL 'NEXT_PUBLIC_POCKETBASE_URL' está correta e se o servidor PocketBase está rodando.` };
     }
     return { success: false, message: `Erro ao comunicar com o PocketBase: ${e.message}. Verifique as permissões de API da coleção 'partners'.` };
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   }
 }
 
@@ -431,54 +315,6 @@ const UpdateTransactionSchema = z.object({
 
 
 export async function updateTransactionAction(prevState: any, formData: FormData) {
-<<<<<<< HEAD
-    const validatedFields = UpdateTransactionSchema.safeParse({
-        transactionId: formData.get('transactionId'),
-        transactionType: formData.get('transactionType'),
-        partnerId: formData.get('partnerId'),
-        totalSaleValue: formData.get('totalSaleValue'),
-        externalSaleId: formData.get('externalSaleId'),
-        saleDate: formData.get('saleDate'),
-        pointsToRedeem: formData.get('pointsToRedeem'),
-        redemptionDate: formData.get('redemptionDate'),
-    });
-
-    if (!validatedFields.success) {
-        return { success: false, title: "Erro de Validação", message: 'Dados de edição inválidos.' };
-    }
-
-    const { transactionId, transactionType, partnerId, totalSaleValue, externalSaleId, saleDate, pointsToRedeem, redemptionDate } = validatedFields.data;
-
-    try {
-        let result;
-        if (transactionType === TransactionType.SALE) {
-            if (!totalSaleValue) {
-                 return { success: false, title: "Erro de Validação", message: 'Valor da venda é obrigatório para editar uma venda.' };
-            }
-            result = await dbUpdateSaleTransaction(transactionId, partnerId, totalSaleValue, externalSaleId || undefined, saleDate);
-        } else if (transactionType === TransactionType.REDEMPTION) {
-            if (!pointsToRedeem) {
-                 return { success: false, title: "Erro de Validação", message: 'Pontos a resgatar são obrigatórios para editar um resgate.' };
-            }
-             result = await dbUpdateRedemptionTransaction(transactionId, partnerId, pointsToRedeem, redemptionDate);
-        } else {
-            return { success: false, title: "Erro", message: "Tipo de transação desconhecido." };
-        }
-
-        if (result.success) {
-            revalidatePath('/');
-            revalidatePath('/transactions');
-            revalidatePath('/reports');
-            revalidatePath('/partners');
-            return { success: true, title: "Sucesso!", message: result.message };
-        } else {
-            return { success: false, title: "Erro ao Atualizar", message: result.message || "Ocorreu um erro desconhecido." };
-        }
-
-    } catch (error: any) {
-        return { success: false, title: "Erro Inesperado", message: `Ocorreu um erro inesperado: ${error.message || error}.` };
-    }
-=======
   const validatedFields = UpdateTransactionSchema.safeParse({
     transactionId: formData.get('transactionId'),
     transactionType: formData.get('transactionType'),
@@ -525,5 +361,4 @@ export async function updateTransactionAction(prevState: any, formData: FormData
   } catch (error: any) {
     return { success: false, title: "Erro Inesperado", message: `Ocorreu um erro inesperado: ${error.message || error}.` };
   }
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
 }

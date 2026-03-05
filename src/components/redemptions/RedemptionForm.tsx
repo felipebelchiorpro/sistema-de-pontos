@@ -96,22 +96,6 @@ export function RedemptionForm({ partners }: { partners: Partner[] }) {
           shownFieldErrorToast = true;
         }
         if (errorFields._form?.[0]) {
-<<<<<<< HEAD
-           toast({
-                title: state.title || "Erro",
-                description: errorFields._form[0],
-                variant: "destructive",
-            });
-           shownFieldErrorToast = true;
-        }
-      }
-      
-      if (!shownFieldErrorToast && state.message) {
-         toast({
-            title: state.title || "Erro ao resgatar pontos",
-            description: state.message,
-            variant: "destructive",
-=======
           toast({
             title: state.title || "Erro",
             description: errorFields._form[0],
@@ -126,7 +110,6 @@ export function RedemptionForm({ partners }: { partners: Partner[] }) {
           title: state.title || "Erro ao resgatar pontos",
           description: state.message,
           variant: "destructive",
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         });
       }
     }
@@ -140,80 +123,13 @@ export function RedemptionForm({ partners }: { partners: Partner[] }) {
   };
 
   return (
-<<<<<<< HEAD
-    <Card className="w-full max-w-md bg-card">
-=======
     <Card className="w-full max-w-md bg-card/40 backdrop-blur-md border-white/5 shadow-xl">
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       <CardHeader>
         <CardTitle>Resgatar Pontos do Parceiro</CardTitle>
         <CardDescription>Selecione o parceiro e insira a quantidade de pontos a serem resgatados.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-<<<<<<< HEAD
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="coupon"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Cupom do Parceiro</FormLabel>
-                             <Select onValueChange={field.onChange} value={field.value || ""} defaultValue={field.value || ""}>
-                                <FormControl>
-                                    <SelectTrigger className="bg-input">
-                                        <SelectValue placeholder="Selecione um parceiro" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {partners.length > 0 ? (
-                                        partners.map((partner) => (
-                                            <SelectItem key={partner.coupon} value={partner.coupon}>
-                                                {partner.name} ({partner.coupon})
-                                            </SelectItem>
-                                        ))
-                                    ) : (
-                                        <SelectItem value="no-options" disabled>Nenhum parceiro cadastrado</SelectItem>
-                                    )}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                             {currentPartnerPoints !== null && (
-                                <p className="text-sm text-muted-foreground pt-1">
-                                    Pontos disponíveis: <span className="font-semibold text-primary">{currentPartnerPoints.toFixed(2)}</span>
-                                </p>
-                            )}
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="pointsToRedeem"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Pontos a Resgatar</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <Gift className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="50.00"
-                                        className="pl-9 bg-input"
-                                        disabled={currentPartnerPoints === null}
-                                        {...field}
-                                    />
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                
-                <SubmitButton />
-            </form>
-=======
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
             <FormField
               control={form.control}
@@ -275,7 +191,6 @@ export function RedemptionForm({ partners }: { partners: Partner[] }) {
 
             <SubmitButton />
           </form>
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         </Form>
       </CardContent>
     </Card>

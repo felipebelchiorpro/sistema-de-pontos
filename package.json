@@ -46,10 +46,7 @@
     "lucide-react": "^0.481.0",
     "next": "15.3.8",
     "patch-package": "^8.0.0",
-<<<<<<< HEAD
-=======
     "pocketbase": "^0.22.1",
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",

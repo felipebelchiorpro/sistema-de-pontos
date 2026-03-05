@@ -38,17 +38,10 @@ type SaleFormData = z.infer<typeof SaleSchema>;
 const initialState = {
   title: "",
   message: "",
-<<<<<<< HEAD
-  errors: {},
-  success: false,
-  pointsGenerated: 0,
-  discountedValue: 0,
-=======
   errors: {} as Record<string, string[]>,
   success: false,
   pointsGenerated: undefined as number | undefined,
   discountedValue: undefined as number | undefined,
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
 };
 
 function SubmitButton() {
@@ -62,11 +55,7 @@ function SubmitButton() {
 }
 
 export function SalesForm({ partners }: { partners: Partner[] }) {
-<<<<<<< HEAD
-  const [state, formAction] = useActionState(registerSaleAction, initialState);
-=======
   const [state, formAction] = useActionState(registerSaleAction, initialState, "");
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   const { toast } = useToast();
 
   const [calculatedDiscountedValue, setCalculatedDiscountedValue] = useState<number | null>(null);
@@ -105,41 +94,6 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
       setCalculatedDiscountedValue(null);
       setCalculatedPointsGenerated(null);
     } else if (!state.success && state.message) {
-<<<<<<< HEAD
-        const errorFields = state.errors as any;
-        let shownFieldErrorToast = false;
-
-        if (errorFields) {
-            if (errorFields.coupon?.[0]) {
-                form.setError("coupon", { type: "manual", message: errorFields.coupon[0] });
-                shownFieldErrorToast = true;
-            }
-            if (errorFields.totalSaleValue?.[0]) {
-                form.setError("totalSaleValue", { type: "manual", message: errorFields.totalSaleValue[0] });
-                shownFieldErrorToast = true;
-            }
-            if (errorFields.externalSaleId?.[0]) {
-                form.setError("externalSaleId", { type: "manual", message: errorFields.externalSaleId[0] });
-                shownFieldErrorToast = true;
-            }
-            if (errorFields._form?.[0]) {
-                toast({
-                    title: state.title || "Erro",
-                    description: errorFields._form[0],
-                    variant: "destructive",
-                });
-                shownFieldErrorToast = true;
-            }
-        }
-        
-        if (!shownFieldErrorToast && state.message) {
-            toast({
-                title: state.title || "Erro ao registrar venda",
-                description: state.message,
-                variant: "destructive",
-            });
-        }
-=======
       const errorFields = state.errors as any;
       let shownFieldErrorToast = false;
 
@@ -173,7 +127,6 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
           variant: "destructive",
         });
       }
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
     }
   }, [state, toast, form]);
 
@@ -187,13 +140,6 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
     if (data.saleDate) {
       formData.append("saleDate", data.saleDate.toISOString());
     }
-<<<<<<< HEAD
-    formAction(formData);
-  };
-  
-  return (
-    <Card className="w-full max-w-md bg-card">
-=======
     // Using startTransition to wrap the form action in case React 19 needs it
     import('react').then(({ startTransition }) => {
       startTransition(() => {
@@ -204,119 +150,12 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
 
   return (
     <Card className="w-full max-w-md bg-card/40 backdrop-blur-md border-white/5 shadow-xl">
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       <CardHeader>
         <CardTitle>Registrar Venda com Cupom</CardTitle>
         <CardDescription>Selecione o cupom do parceiro e insira o valor da compra.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-<<<<<<< HEAD
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="coupon"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Cupom do Parceiro</FormLabel>
-                             <Select onValueChange={field.onChange} value={field.value || ""}>
-                                <FormControl>
-                                    <SelectTrigger className="bg-input">
-                                        <SelectValue placeholder="Selecione um cupom" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {partners.length > 0 ? (
-                                        partners.map((partner) => (
-                                            <SelectItem key={partner.coupon} value={partner.coupon}>
-                                                {partner.name} ({partner.coupon})
-                                            </SelectItem>
-                                        ))
-                                    ) : (
-                                        <SelectItem value="no-options" disabled>Nenhum parceiro cadastrado</SelectItem>
-                                    )}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="totalSaleValue"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Valor Total da Compra (R$)</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="100.00"
-                                        className="pl-9 bg-input"
-                                        {...field}
-                                    />
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="externalSaleId"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Código da Venda (Sistema Externo)</FormLabel>
-                             <FormControl>
-                                <div className="relative">
-                                    <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Ex: PEDIDO123XYZ (Opcional)"
-                                        className="pl-9 bg-input"
-                                        {...field}
-                                    />
-                                </div>
-                             </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                
-                <FormField
-                    control={form.control}
-                    name="saleDate"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>Data da Venda (Opcional)</FormLabel>
-                            <DatePicker 
-                                date={field.value} 
-                                setDate={field.onChange} 
-                                placeholder="Hoje"
-                            />
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                {calculatedDiscountedValue !== null && totalSaleValue > 0 &&(
-                    <div className="space-y-3 pt-2">
-                    <div className="flex justify-between items-center p-3 rounded-md bg-secondary/50">
-                        <span className="text-sm text-muted-foreground">Valor com Desconto (7.5%):</span>
-                        <span className="font-semibold text-foreground">R$ {calculatedDiscountedValue.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 rounded-md bg-secondary/50">
-                        <span className="text-sm text-muted-foreground">Pontos Gerados (7.5%):</span>
-                        <span className="font-semibold text-primary">{calculatedPointsGenerated?.toFixed(2)} pts</span>
-                    </div>
-                    </div>
-                )}
-                <SubmitButton />
-            </form>
-=======
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
             <FormField
               control={form.control}
@@ -421,7 +260,6 @@ export function SalesForm({ partners }: { partners: Partner[] }) {
             )}
             <SubmitButton />
           </form>
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         </Form>
       </CardContent>
     </Card>

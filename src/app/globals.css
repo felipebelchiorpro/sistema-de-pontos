@@ -8,54 +8,6 @@ body {
 
 @layer base {
   :root {
-<<<<<<< HEAD
-    --background: 0 0% 13%; /* Dark Gray #222222 */
-    --foreground: 0 0% 98%; /* White */
-
-    --card: 0 0% 10%; /* Darker Card */
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 10%; /* Dark Popover */
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 100% 27%; /* Dark Red #8B0000 */
-    --primary-foreground: 0 0% 98%; /* White on Red */
-
-    --secondary: 0 0% 20%; /* Slightly Lighter Gray for secondary elements */
-    --secondary-foreground: 0 0% 98%; /* White text on secondary */
-
-    --muted: 0 0% 25%; /* Muted Gray */
-    --muted-foreground: 0 0% 70%; /* Lighter Muted Text */
-
-    --accent: 0 0% 80%; /* Light Gray #CCCCCC for highlights */
-    --accent-foreground: 0 0% 9%; /* Dark text on Accent */
-
-    --destructive: 0 70% 50%; /* A visible red for destructive actions */
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 20%; /* Dark Border */
-    --input: 0 0% 16%; /* Dark Input Background, slightly different from card/popover */
-    --ring: 0 100% 35%; /* Brighter red for ring/focus, derived from primary */
-
-    --radius: 0.5rem;
-
-    /* Chart colors - adjusted for better visibility on dark theme */
-    --chart-1: 0 100% 40%; /* Brighter Red */
-    --chart-2: 210 80% 60%; /* Light Blue */
-    --chart-3: 45 90% 55%; /* Yellow/Orange */
-    --chart-4: 120 60% 50%; /* Green */
-    --chart-5: 0 0% 70%; /* Light Gray */
-    
-    /* Sidebar specific variables for dark theme */
-    --sidebar-background: 0 0% 8%; /* Even darker for sidebar */
-    --sidebar-foreground: 0 0% 85%; /* Light gray text on sidebar */
-    --sidebar-primary: 0 100% 27%; /* Dark Red for active/primary items in sidebar */
-    --sidebar-primary-foreground: 0 0% 98%; /* White text on sidebar primary */
-    --sidebar-accent: 0 0% 15%; /* Accent for hover in sidebar */
-    --sidebar-accent-foreground: 0 0% 98%; /* White text on sidebar accent */
-    --sidebar-border: 0 0% 18%; /* Border for sidebar elements */
-    --sidebar-ring: 0 100% 35%; /* Ring for focus in sidebar */
-=======
     --background: 240 10% 4%; /* Zinc 950 */
     --foreground: 0 0% 98%;
 
@@ -102,7 +54,6 @@ body {
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 240 4% 12%;
     --sidebar-ring: 343 100% 45%;
->>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   }
 
   /* Removed .dark specific block as dark is now the default theme */
