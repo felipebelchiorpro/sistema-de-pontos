@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { getPartners, getAllTransactionsWithPartnerDetails } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

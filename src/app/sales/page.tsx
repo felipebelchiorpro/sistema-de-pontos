@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { SalesForm } from "@/components/sales/SalesForm";
 import { getPartners } from "@/lib/mock-data";

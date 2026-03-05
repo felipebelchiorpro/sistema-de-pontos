@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { RedemptionForm } from "@/components/redemptions/RedemptionForm";
 import { getPartners } from "@/lib/mock-data";

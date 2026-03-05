@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { DiscountCalculator } from "@/components/calculator/DiscountCalculator";
 

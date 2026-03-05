@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { PocketBaseTest } from "@/components/settings/PocketBaseTest";
 

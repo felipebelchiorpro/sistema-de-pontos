@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { PartnerForm } from "@/components/partners/PartnerForm";
 import { PartnersTable } from "@/components/partners/PartnersTable";
