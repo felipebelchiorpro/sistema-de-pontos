@@ -57,7 +57,11 @@ export function PartnerForm() {
         title: state.title || "Sucesso!",
         description: state.message,
       });
+<<<<<<< HEAD
       form.reset(); 
+=======
+      form.reset();
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
     } else if (!state.success && state.message) {
       const errorFields = state.errors as any;
       let shownFieldErrorToast = false;
@@ -72,6 +76,7 @@ export function PartnerForm() {
           shownFieldErrorToast = true;
         }
         if (errorFields._form?.[0]) {
+<<<<<<< HEAD
            toast({
                 title: state.title || "Erro",
                 description: errorFields._form[0],
@@ -86,6 +91,22 @@ export function PartnerForm() {
             title: state.title || "Erro ao cadastrar parceiro",
             description: state.message,
             variant: "destructive",
+=======
+          toast({
+            title: state.title || "Erro",
+            description: errorFields._form[0],
+            variant: "destructive",
+          });
+          shownFieldErrorToast = true; // Consider this as a field error for toast logic
+        }
+      }
+
+      if (!shownFieldErrorToast && state.message) {
+        toast({
+          title: state.title || "Erro ao cadastrar parceiro",
+          description: state.message,
+          variant: "destructive",
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         });
       }
     }
@@ -98,14 +119,22 @@ export function PartnerForm() {
     formData.append("coupon", data.coupon.toUpperCase());
     formAction(formData);
   };
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   const handleCouponChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     form.setValue("coupon", event.target.value.toUpperCase(), { shouldValidate: true });
   };
 
 
   return (
+<<<<<<< HEAD
     <Card className="w-full max-w-lg bg-card">
+=======
+    <Card className="w-full max-w-lg bg-card/40 backdrop-blur-md border-white/5 shadow-xl">
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       <CardHeader>
         <CardTitle>Cadastrar Novo Parceiro</CardTitle>
         <CardDescription>Preencha os dados para adicionar um novo parceiro ao sistema.</CardDescription>
@@ -123,8 +152,13 @@ export function PartnerForm() {
             {form.formState.errors.name && (
               <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
             )}
+<<<<<<< HEAD
              {/* Server-side field error for name, if not already set by client-side RHF */}
              {state?.errors?.name && Array.isArray(state.errors.name) && !form.formState.errors.name && (
+=======
+            {/* Server-side field error for name, if not already set by client-side RHF */}
+            {state?.errors?.name && Array.isArray(state.errors.name) && !form.formState.errors.name && (
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
               <p className="text-sm text-destructive">{state.errors.name[0]}</p>
             )}
           </div>
@@ -144,10 +178,17 @@ export function PartnerForm() {
             )}
             {/* Server-side field error for coupon, if not already set by client-side RHF */}
             {state?.errors?.coupon && Array.isArray(state.errors.coupon) && !form.formState.errors.coupon && (
+<<<<<<< HEAD
                <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
             )}
           </div>
           
+=======
+              <p className="text-sm text-destructive">{state.errors.coupon[0]}</p>
+            )}
+          </div>
+
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
           <SubmitButton />
         </form>
       </CardContent>

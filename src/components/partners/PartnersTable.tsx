@@ -12,7 +12,11 @@ import { Badge } from "@/components/ui/badge";
 
 export function PartnersTable({ partners }: { partners: Partner[] }) {
   return (
+<<<<<<< HEAD
     <Card className="bg-card">
+=======
+    <Card className="bg-card/40 backdrop-blur-md border-white/5 shadow-xl">
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
       <CardHeader>
         <CardTitle>Lista de Parceiros</CardTitle>
         <CardDescription>Parceiros cadastrados no sistema e seus pontos acumulados.</CardDescription>
@@ -32,8 +36,13 @@ export function PartnersTable({ partners }: { partners: Partner[] }) {
               <TableBody>
                 {partners.map((partner) => (
                   <TableRow key={partner.id}>
+<<<<<<< HEAD
                     <TableCell className="font-mono text-xs text-muted-foreground truncate" style={{maxWidth: '100px'}} title={partner.id}>
                         {partner.id.substring(0,8)}...
+=======
+                    <TableCell className="font-mono text-xs text-muted-foreground truncate" style={{ maxWidth: '100px' }} title={partner.id}>
+                      {partner.id.substring(0, 8)}...
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
                     </TableCell>
                     <TableCell className="font-medium text-foreground">{partner.name}</TableCell>
                     <TableCell>

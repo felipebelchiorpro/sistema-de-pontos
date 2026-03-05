@@ -56,7 +56,11 @@ const EditRedemptionSchema = z.object({
 
 // Helper to get the correct validation schema based on transaction type
 const getValidationSchema = (type: TransactionType) => {
+<<<<<<< HEAD
     return type === TransactionType.SALE ? EditSaleSchema : EditRedemptionSchema;
+=======
+  return type === TransactionType.SALE ? EditSaleSchema : EditRedemptionSchema;
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
 }
 
 type EditFormData = z.infer<typeof EditSaleSchema> | z.infer<typeof EditRedemptionSchema>;
@@ -75,6 +79,7 @@ function SubmitButton() {
 const initialState = { title: "", message: "", errors: {}, success: false };
 
 export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners }: EditTransactionSheetProps) {
+<<<<<<< HEAD
   const [state, formAction] = useActionState(updateTransactionAction, initialState);
   const { toast } = useToast();
   
@@ -82,10 +87,35 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
     resolver: zodResolver(getValidationSchema(transaction.type)),
     // Default values are set dynamically based on the transaction type
     defaultValues: transaction.type === TransactionType.SALE ? {
+=======
+  const [state, formAction] = useActionState(updateTransactionAction, initialState, "");
+  const { toast } = useToast();
+
+  const form = useForm<EditFormData>({
+    resolver: zodResolver(getValidationSchema(transaction.type) as any),
+    // Default values are set dynamically based on the transaction type
+    defaultValues: transaction.type === TransactionType.SALE ? {
+      partnerId: transaction.partnerId,
+      totalSaleValue: transaction.originalSaleValue || 0,
+      externalSaleId: transaction.externalSaleId || '',
+      saleDate: transaction.date ? parseISO(transaction.date) : new Date(),
+    } : {
+      partnerId: transaction.partnerId,
+      pointsToRedeem: transaction.amount,
+      redemptionDate: transaction.date ? parseISO(transaction.date) : new Date(),
+    }
+  });
+
+  useEffect(() => {
+    // Reset form with new transaction data when it changes
+    form.reset(
+      transaction.type === TransactionType.SALE ? {
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         partnerId: transaction.partnerId,
         totalSaleValue: transaction.originalSaleValue || 0,
         externalSaleId: transaction.externalSaleId || '',
         saleDate: transaction.date ? parseISO(transaction.date) : new Date(),
+<<<<<<< HEAD
     } : {
         partnerId: transaction.partnerId,
         pointsToRedeem: transaction.amount,
@@ -109,6 +139,16 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
     )
    }, [transaction, form]);
   
+=======
+      } : {
+        partnerId: transaction.partnerId,
+        pointsToRedeem: transaction.amount,
+        redemptionDate: transaction.date ? parseISO(transaction.date) : new Date(),
+      }
+    )
+  }, [transaction, form]);
+
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   useEffect(() => {
     if (state.success) {
       toast({
@@ -117,6 +157,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
       });
       setIsOpen(false);
     } else if (!state.success && state.message) {
+<<<<<<< HEAD
         toast({
             title: state.title || 'Erro',
             description: state.message,
@@ -125,6 +166,16 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
     }
   }, [state, toast, setIsOpen]);
   
+=======
+      toast({
+        title: state.title || 'Erro',
+        description: state.message,
+        variant: "destructive",
+      });
+    }
+  }, [state, toast, setIsOpen]);
+
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   const handleFormSubmit = (data: EditFormData) => {
     const formData = new FormData();
     formData.append('transactionId', transaction.id);
@@ -132,6 +183,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
 
     // Append data specific to the transaction type
     if (transaction.type === TransactionType.SALE) {
+<<<<<<< HEAD
         const saleData = data as z.infer<typeof EditSaleSchema>;
         formData.append('partnerId', saleData.partnerId);
         formData.append('totalSaleValue', saleData.totalSaleValue.toString());
@@ -147,6 +199,23 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
     formAction(formData);
   };
   
+=======
+      const saleData = data as z.infer<typeof EditSaleSchema>;
+      formData.append('partnerId', saleData.partnerId);
+      formData.append('totalSaleValue', saleData.totalSaleValue.toString());
+      if (saleData.externalSaleId) formData.append('externalSaleId', saleData.externalSaleId);
+      if (saleData.saleDate) formData.append('saleDate', saleData.saleDate.toISOString());
+    } else {
+      const redemptionData = data as z.infer<typeof EditRedemptionSchema>;
+      formData.append('partnerId', redemptionData.partnerId);
+      formData.append('pointsToRedeem', redemptionData.pointsToRedeem.toString());
+      if (redemptionData.redemptionDate) formData.append('redemptionDate', redemptionData.redemptionDate.toISOString());
+    }
+
+    formAction(formData);
+  };
+
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className="sm:max-w-lg overflow-y-auto">
@@ -157,6 +226,7 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
+<<<<<<< HEAD
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 py-6">
                 {/* Conditional rendering for SALE transaction fields */}
                 {transaction.type === TransactionType.SALE && (
@@ -248,6 +318,99 @@ export function EditTransactionSheet({ isOpen, setIsOpen, transaction, partners 
                     <SubmitButton />
                 </SheetFooter>
             </form>
+=======
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 py-6">
+            {/* Conditional rendering for SALE transaction fields */}
+            {transaction.type === TransactionType.SALE && (
+              <>
+                <FormField control={form.control} name="partnerId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parceiro</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Selecione um parceiro" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {partners.map(p => <SelectItem key={p.id} value={p.id}>{p.name} ({p.coupon})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="totalSaleValue" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor Total da Compra (R$)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.valueAsNumber || 0)} className="pl-9" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="externalSaleId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código da Venda (Externo)</FormLabel>
+                    <FormControl><Input {...field} value={field.value || ''} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="saleDate" render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data da Venda</FormLabel>
+                    <DatePicker date={field.value} setDate={field.onChange} />
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </>
+            )}
+            {/* Conditional rendering for REDEMPTION transaction fields */}
+            {transaction.type === TransactionType.REDEMPTION && (
+              <>
+                <FormField control={form.control} name="partnerId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parceiro</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Selecione um parceiro" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {partners.map(p => <SelectItem key={p.id} value={p.id}>{p.name} ({p.coupon})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="pointsToRedeem" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pontos a Resgatar</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Gift className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.valueAsNumber || 0)} className="pl-9" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="redemptionDate" render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data do Resgate</FormLabel>
+                    <DatePicker date={field.value} setDate={field.onChange} />
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </>
+            )}
+            <SheetFooter className="pt-4">
+              <SheetClose asChild>
+                <Button type="button" variant="outline">Cancelar</Button>
+              </SheetClose>
+              <SubmitButton />
+            </SheetFooter>
+          </form>
+>>>>>>> 78b646e (feat: migrate backend to PocketBase and update UI to premium dark theme)
         </Form>
       </SheetContent>
     </Sheet>
