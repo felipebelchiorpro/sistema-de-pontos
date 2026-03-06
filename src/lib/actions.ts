@@ -286,6 +286,8 @@ export async function fetchIndividualPartnerReportDataAction(
 }
 
 export async function testPocketBaseConnectionAction(): Promise<{ success: boolean; message: string; }> {
+  console.log("Testing PocketBase connection...");
+  console.log("URL:", process.env.NEXT_PUBLIC_POCKETBASE_URL);
   try {
     // A simple authenticated call to check connection & rights
     await pb.collection('partners').getList(1, 1);
@@ -293,10 +295,16 @@ export async function testPocketBaseConnectionAction(): Promise<{ success: boole
     return { success: true, message: 'Conexão com o PocketBase estabelecida com sucesso!' };
 
   } catch (e: any) {
+    console.error("PocketBase test error details:", {
+      status: e.status,
+      message: e.message,
+      data: e.data,
+      url: process.env.NEXT_PUBLIC_POCKETBASE_URL
+    });
     if (e.status === 0 || String(e.message).includes('fetch')) {
-      return { success: false, message: `Erro de rede ao conectar ao PocketBase: ${e.message}. Verifique se a URL 'NEXT_PUBLIC_POCKETBASE_URL' está correta e se o servidor PocketBase está rodando.` };
+      return { success: false, message: `Erro de rede [Status ${e.status}] ao conectar ao PocketBase: ${e.message}. URL: ${process.env.NEXT_PUBLIC_POCKETBASE_URL}. Verifique se a URL está correta e acessível pela VPS.` };
     }
-    return { success: false, message: `Erro ao comunicar com o PocketBase: ${e.message}. Verifique as permissões de API da coleção 'partners'.` };
+    return { success: false, message: `Erro ao comunicar com o PocketBase: ${e.message}. Status: ${e.status}. Verifique as permissões de API da coleção 'partners'.` };
   }
 }
 
